@@ -1,5 +1,6 @@
-import { StatusBar, StyleSheet, Text, useColorScheme, View } from 'react-native';
+import { StatusBar, useColorScheme } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Navigation } from './src/navigation/RootStack';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -7,19 +8,9 @@ function App() {
   return (
     <SafeAreaProvider>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <View style={styles.container}>
-        <Text>Kimbo</Text>
-      </View>
+      <Navigation />
     </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
 
 export default App;
