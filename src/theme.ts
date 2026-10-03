@@ -6,6 +6,7 @@ import { DefaultTheme, type Theme } from '@react-navigation/native';
 export const colors = {
   primary: '#1F4D3A', // deep forest green: icon background, app primary
   background: '#F6EFE2', // warm cream: ring and face, app background
+  surface: '#FFFFFF', // cards and Kimbo's chat bubbles on cream
   accent: '#F2A33A', // turmeric: ring tip, streaks, CTAs
   text: '#1C2B24', // green-black ink
   alert: '#D9532F', // terracotta: over-target and out-of-range flags

@@ -34,6 +34,10 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Kimbo uses your camera to log a meal from a photo of your plate.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Kimbo uses your microphone so you can log a meal by saying what you ate.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string/>
 	<key>UILaunchStoryboardName</key>
