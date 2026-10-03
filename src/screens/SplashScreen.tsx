@@ -1,8 +1,7 @@
 import LottieView from 'lottie-react-native';
 import { useRef } from 'react';
 import { Animated, StatusBar, StyleSheet } from 'react-native';
-
-const BRAND_GREEN = '#1F4D3A';
+import { colors } from '../theme';
 
 type Props = {
   onFinish: () => void;
@@ -40,7 +39,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: BRAND_GREEN,
+    backgroundColor: colors.primary,
   },
   // Sized so the ring matches the Android 12+ system splash icon it replaces.
   animation: {

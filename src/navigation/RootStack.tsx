@@ -4,6 +4,7 @@ import {
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { HomeScreen } from '../screens/HomeScreen';
+import { navigationTheme } from '../theme';
 
 const RootStack = createNativeStackNavigator({
   screens: {
@@ -14,7 +15,11 @@ const RootStack = createNativeStackNavigator({
   },
 });
 
-export const Navigation = createStaticNavigation(RootStack);
+const StaticNavigation = createStaticNavigation(RootStack);
+
+export function Navigation() {
+  return <StaticNavigation theme={navigationTheme} />;
+}
 
 type RootStackParamList = StaticParamList<typeof RootStack>;
 
