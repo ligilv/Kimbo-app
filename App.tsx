@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import { StatusBar } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Navigation } from './src/navigation/RootStack';
-import { SplashScreen } from './src/screens/SplashScreen';
+import { Navigation } from '@/navigation/RootStack';
+import { SplashScreen } from '@/screens/SplashScreen';
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
 
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle="dark-content" />
-      <Navigation />
-      {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
-    </SafeAreaProvider>
+    <GestureHandlerRootView>
+      <SafeAreaProvider>
+        <StatusBar barStyle="dark-content" />
+        <Navigation />
+        {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 

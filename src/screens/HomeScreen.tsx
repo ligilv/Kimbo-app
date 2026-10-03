@@ -1,10 +1,10 @@
-import { StyleSheet, Text, View } from 'react-native';
-import { colors } from '../theme';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '@/components/Text';
 
 export function HomeScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Kimbo</Text>
+      <Text>Kimbo</Text>
     </View>
   );
 }
@@ -14,8 +14,5 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  text: {
-    color: colors.text,
   },
 });

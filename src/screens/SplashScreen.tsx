@@ -1,7 +1,7 @@
 import LottieView from 'lottie-react-native';
 import { useRef } from 'react';
 import { Animated, StatusBar, StyleSheet } from 'react-native';
-import { colors } from '../theme';
+import { colors } from '@/theme';
 
 type Props = {
   onFinish: () => void;
@@ -24,7 +24,7 @@ export function SplashScreen({ onFinish }: Props) {
     <Animated.View style={[styles.container, { opacity }]}>
       <StatusBar barStyle="light-content" />
       <LottieView
-        source={require('../assets/lottie/kimbo_loader_dark_bg.json')}
+        source={require('@/assets/lottie/kimbo_loader_dark_bg.json')}
         autoPlay
         loop={false}
         onAnimationFinish={fadeOut}

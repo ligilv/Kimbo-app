@@ -3,8 +3,8 @@ import {
   type StaticParamList,
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { HomeScreen } from '../screens/HomeScreen';
-import { navigationTheme } from '../theme';
+import { HomeScreen } from '@/screens/HomeScreen';
+import { navigationTheme } from '@/theme';
 
 const RootStack = createNativeStackNavigator({
   screens: {

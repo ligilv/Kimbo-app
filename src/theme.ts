@@ -11,6 +11,17 @@ export const colors = {
   alert: '#D9532F', // terracotta: over-target and out-of-range flags
 } as const;
 
+// Nunito, one file per weight. The family name is the file name on Android and the
+// PostScript name on iOS; both are e.g. "Nunito-Bold", so one name works on both.
+// Always pair with fontWeight 'normal': asking Android for bold on top of
+// Nunito-Bold makes it fake-bold the already-bold file.
+export const fonts = {
+  regular: 'Nunito-Regular', // body text
+  semiBold: 'Nunito-SemiBold', // labels, buttons
+  bold: 'Nunito-Bold', // headings
+  extraBold: 'Nunito-ExtraBold', // big numbers (calories, macros)
+} as const;
+
 export const navigationTheme: Theme = {
   ...DefaultTheme,
   colors: {
@@ -21,5 +32,11 @@ export const navigationTheme: Theme = {
     text: colors.text,
     border: 'rgba(28, 43, 36, 0.12)', // ink at 12%
     notification: colors.alert,
+  },
+  fonts: {
+    regular: { fontFamily: fonts.regular, fontWeight: 'normal' },
+    medium: { fontFamily: fonts.semiBold, fontWeight: 'normal' },
+    bold: { fontFamily: fonts.bold, fontWeight: 'normal' },
+    heavy: { fontFamily: fonts.extraBold, fontWeight: 'normal' },
   },
 };
