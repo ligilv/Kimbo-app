@@ -54,8 +54,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 20,
   },
-  // A fixed max width, not flexShrink: Android under-measures shrinking text and
-  // clips the last line (e.g. "How tall are" with "you?" cut off).
   kimboBubble: {
     maxWidth: '78%',
     backgroundColor: colors.surface,

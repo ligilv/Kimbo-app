@@ -23,6 +23,11 @@ export const fonts = {
   extraBold: 'Nunito-ExtraBold', // big numbers (calories, macros)
 } as const;
 
+// Spacing and corner radii already used across onboarding. New screens should use
+// these instead of typing numbers.
+export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 } as const;
+export const radius = { sm: 12, md: 16, lg: 20, xl: 24, pill: 999 } as const;
+
 export const navigationTheme: Theme = {
   ...DefaultTheme,
   colors: {

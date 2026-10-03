@@ -12,12 +12,9 @@ import {
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '@/components/Text';
-import {
-  KimboBubble,
-  UserBubble,
-} from '@/features/onboarding/components/ChatBubble';
+import { KimboBubble, UserBubble } from '@/components/chat/ChatBubble';
 import { Composer } from '@/features/onboarding/components/Composer';
-import { TypingIndicator } from '@/features/onboarding/components/TypingIndicator';
+import { TypingIndicator } from '@/components/chat/TypingIndicator';
 import {
   onboardingProgress,
   STEPS,

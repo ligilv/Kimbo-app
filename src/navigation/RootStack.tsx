@@ -5,20 +5,21 @@ import {
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useIsOnboarded } from '@/features/onboarding/useOnboarding';
 import { HomeScreen } from '@/screens/HomeScreen';
+import { LogMealScreen } from '@/screens/LogMealScreen';
 import { OnboardingScreen } from '@/screens/OnboardingScreen';
+import { ProfileScreen } from '@/screens/ProfileScreen';
 import { WelcomeScreen } from '@/screens/WelcomeScreen';
 import { navigationTheme } from '@/theme';
 
 const useNeedsOnboarding = () => !useIsOnboarded();
 
-// Until onboarding is finished the app opens on Welcome, then the chat.
-// Finishing onboarding swaps both for Home.
+
 const RootStack = createNativeStackNavigator({
   screens: {
     Welcome: {
       if: useNeedsOnboarding,
       screen: WelcomeScreen,
-      options: { headerShown: false },
+      options: { headerShown: false},
     },
     Onboarding: {
       if: useNeedsOnboarding,
@@ -28,7 +29,17 @@ const RootStack = createNativeStackNavigator({
     Home: {
       if: useIsOnboarded,
       screen: HomeScreen,
-      options: { title: 'Kimbo' },
+      options: { headerShown: false },
+    },
+    LogMeal: {
+      if: useIsOnboarded,
+      screen: LogMealScreen,
+      options: { title: 'Log a meal', presentation: 'fullScreenModal' },
+    },
+    Profile: {
+      if: useIsOnboarded,
+      screen: ProfileScreen,
+      options: { title: 'Profile' },
     },
   },
 });
