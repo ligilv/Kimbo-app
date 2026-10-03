@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Window background while JS loads: brand green + the static Kimbo face, sized so it sits exactly
+     where the Android 12+ system splash icon and the first frame of the JS Lottie splash are. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/ic_launcher_background" />
+    <item
+        android:width="290dp"
+        android:height="290dp"
+        android:drawable="@drawable/ic_launcher_foreground"
+        android:gravity="center" />
+</layer-list>

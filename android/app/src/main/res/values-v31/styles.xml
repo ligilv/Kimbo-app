@@ -1,12 +1,10 @@
 <resources>
 
-    <!-- Base application theme. -->
+    <!-- Android 12+: same theme, plus the system splash colour (it can't use a layer-list background). -->
     <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <!-- Customize your theme here. -->
         <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
-        <!-- Static Kimbo face on brand green until JS draws, so there is no empty gap before the
-             JS splash animation starts on top of it. -->
         <item name="android:windowBackground">@drawable/splash_background</item>
+        <item name="android:windowSplashScreenBackground">@color/ic_launcher_background</item>
     </style>
 
 </resources>
