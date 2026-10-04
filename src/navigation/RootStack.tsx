@@ -13,13 +13,12 @@ import { navigationTheme } from '@/theme';
 
 const useNeedsOnboarding = () => !useIsOnboarded();
 
-
 const RootStack = createNativeStackNavigator({
   screens: {
     Welcome: {
       if: useNeedsOnboarding,
       screen: WelcomeScreen,
-      options: { headerShown: false},
+      options: { headerShown: false },
     },
     Onboarding: {
       if: useNeedsOnboarding,
@@ -34,7 +33,7 @@ const RootStack = createNativeStackNavigator({
     LogMeal: {
       if: useIsOnboarded,
       screen: LogMealScreen,
-      options: { title: 'Log a meal', presentation: 'fullScreenModal' },
+      options: { headerShown: false, presentation: 'fullScreenModal' },
     },
     Profile: {
       if: useIsOnboarded,
