@@ -1,6 +1,6 @@
 import { storage } from '@/storage';
 import { type DateKey, daysBetween } from './dates';
-import type { FoodItem, MealLog, Nutrients } from './types';
+import type { FoodItem, MealLog, MealSlot, Nutrients } from './types';
 
 // One MMKV key per day ("meals.2026-10-03") holding that day's logs. Reading a
 // day or a week is then a handful of direct lookups, with no scanning.
@@ -117,6 +117,55 @@ export function deleteItem(logId: string, itemId: string) {
   const items: FoodItem[] = log.items.filter(item => item.id !== itemId);
   if (items.length === 0) deleteLog(logId);
   else updateLog(logId, { items });
+}
+
+// Same food, new amount: nutrients scale in proportion (2 chapatis -> 3 is x1.5).
+export function scaleItem(item: FoodItem, quantity: number): FoodItem {
+  const factor = item.quantity > 0 ? quantity / item.quantity : 1;
+  const oneDecimal = (n: number) => Math.round(n * 10) / 10;
+  return {
+    ...item,
+    quantity,
+    kcal: Math.round(item.kcal * factor),
+    protein: oneDecimal(item.protein * factor),
+    carbs: oneDecimal(item.carbs * factor),
+    fat: oneDecimal(item.fat * factor),
+  };
+}
+
+export function updateItem(logId: string, item: FoodItem) {
+  const date = findDate(logId);
+  if (!date) return;
+  const log = getLogsForDate(date).find(l => l.id === logId)!;
+  updateLog(logId, {
+    items: log.items.map(i => (i.id === item.id ? item : i)),
+  });
+}
+
+// Meals are saved as a group, so moving one item out of a bigger meal splits it
+// into its own meal in the new slot. A single-item meal just changes slot.
+export function moveItem(logId: string, itemId: string, slot: MealSlot) {
+  const date = findDate(logId);
+  if (!date) return;
+  const log = getLogsForDate(date).find(l => l.id === logId)!;
+  if (log.slot === slot) return;
+  if (log.items.length === 1) {
+    updateLog(logId, { slot });
+    return;
+  }
+  const item = log.items.find(i => i.id === itemId);
+  if (!item) return;
+  const now = new Date().toISOString();
+  updateLog(logId, { items: log.items.filter(i => i.id !== itemId) });
+  addLog({
+    id: newId(),
+    date,
+    slot,
+    items: [item],
+    rawText: item.name,
+    createdAt: now,
+    updatedAt: now,
+  });
 }
 
 // For the hooks: tells React when any day's meals change.

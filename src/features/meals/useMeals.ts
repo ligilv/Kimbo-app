@@ -3,7 +3,6 @@ import { type DateKey, getWeekDays } from './dates';
 import {
   daySnapshot,
   getLogsForDate,
-  getTotalsForDate,
   subscribeToMeals,
   totalsForLogs,
 } from './mealStore';
@@ -27,8 +26,13 @@ export function useWeekTotals(anchor: DateKey): Record<DateKey, Nutrients> {
   const snapshot = useSyncExternalStore(subscribeToMeals, () =>
     days.map(daySnapshot).join('\u0000'),
   );
-  return useMemo(
-    () => Object.fromEntries(days.map(day => [day, getTotalsForDate(day)])),
-    [days, snapshot],
-  );
+  return useMemo(() => {
+    const perDay = snapshot.split('\u0000');
+    return Object.fromEntries(
+      days.map((day, i) => [
+        day,
+        totalsForLogs(perDay[i] ? (JSON.parse(perDay[i]) as MealLog[]) : []),
+      ]),
+    );
+  }, [days, snapshot]);
 }

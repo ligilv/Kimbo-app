@@ -14,7 +14,9 @@ import {
 } from 'react-native-safe-area-context';
 import { Text } from '@/components/Text';
 import { CalorieRing, ringLabel } from '@/features/home/components/CalorieRing';
+import { EditItemSheet } from '@/features/home/components/EditItemSheet';
 import { MacroBars } from '@/features/home/components/MacroBars';
+import { MealsList } from '@/features/home/components/MealsList';
 import { TargetExplanationSheet } from '@/features/home/components/TargetExplanationSheet';
 import { WeekStrip } from '@/features/home/components/WeekStrip';
 import {
@@ -24,7 +26,7 @@ import {
   formatShortDate,
   toLocalDateKey,
 } from '@/features/meals/dates';
-import { MEAL_SLOTS } from '@/features/meals/types';
+import type { FoodItem, MealLog } from '@/features/meals/types';
 import { useDayLogs, useWeekTotals } from '@/features/meals/useMeals';
 import {
   displayName,
@@ -48,6 +50,10 @@ export function HomeScreen() {
   const today = toLocalDateKey(new Date());
   const [selected, setSelected] = useState(today);
   const [explaining, setExplaining] = useState(false);
+  const [editing, setEditing] = useState<{
+    log: MealLog;
+    item: FoodItem;
+  } | null>(null);
 
   const { logs, totals } = useDayLogs(selected);
   const weekTotals = useWeekTotals(selected);
@@ -160,20 +166,13 @@ export function HomeScreen() {
               <Text style={styles.cardLabel}>Kimbo nudge · Phase 6</Text>
             </View>
 
-            <View style={styles.card}>
-              <Text style={styles.cardLabel}>Meals · Phase 4</Text>
-              {MEAL_SLOTS.map(slot => {
-                const meals = logs.filter(log => log.slot === slot);
-                return (
-                  <Text key={slot} style={styles.mealLine}>
-                    <Text style={styles.slotName}>{slot}: </Text>
-                    {meals.length
-                      ? meals.map(m => m.rawText).join(', ')
-                      : 'nothing yet'}
-                  </Text>
-                );
-              })}
-            </View>
+            <MealsList
+              logs={logs}
+              onAddToSlot={slot =>
+                navigation.navigate('LogMeal', { date: selected, slot })
+              }
+              onEditItem={(log, item) => setEditing({ log, item })}
+            />
           </ScrollView>
         </View>
       </GestureDetector>
@@ -188,6 +187,15 @@ export function HomeScreen() {
             setExplaining(false);
             navigation.navigate('Profile');
           }}
+        />
+      )}
+
+      {editing && (
+        <EditItemSheet
+          key={editing.item.id}
+          log={editing.log}
+          item={editing.item}
+          onClose={() => setEditing(null)}
         />
       )}
 
@@ -248,8 +256,6 @@ const styles = StyleSheet.create({
   },
   cardLabel: { fontSize: 13, fontFamily: fonts.semiBold, opacity: 0.6 },
   muted: { fontSize: 15, fontFamily: fonts.regular, opacity: 0.7 },
-  mealLine: { fontSize: 15 },
-  slotName: { fontFamily: fonts.semiBold, textTransform: 'capitalize' },
   footer: {
     position: 'absolute',
     left: 0,
