@@ -17,10 +17,14 @@ import { TargetExplanationSheet } from '@/features/home/components/TargetExplana
 import { AppGuide } from '@/features/guide/AppGuide';
 import { WeekStrip } from '@/features/home/components/WeekStrip';
 import { getNudge, getWelcomePlan } from '@/features/home/nudge';
+import { StreakBadge, StreakPrompts } from '@/features/streak/StreakUI';
+import { WaterCard } from '@/features/water/WaterCard';
+import { waterTargetMl } from '@/features/water/water';
 import { useKimboSheet } from '@/features/kimbo/KimboSheetProvider';
 import {
   addDays,
   type DateKey,
+  isEditableDay,
   formatDayLabel,
   formatShortDate,
   toLocalDateKey,
@@ -104,6 +108,7 @@ export function HomeScreen() {
           <Text style={styles.greeting}>Hi, {displayName(answers)}</Text>
           <Text style={styles.dateLabel}>{headerDate(selected)}</Text>
         </View>
+        <StreakBadge />
         {!isTodaySelected && (
           <Pressable
             onPress={() => setSelected(today)}
@@ -125,6 +130,15 @@ export function HomeScreen() {
           onPrevWeek={() => go(addDays(selected, -7))}
           onNextWeek={() => go(addDays(selected, 7))}
         />
+        {hasAnyLogs && (
+          <Pressable
+            onPress={() => navigation.navigate('Progress')}
+            accessibilityRole="link"
+            style={styles.progressLink}
+          >
+            <Text style={styles.progressLinkText}>Your progress →</Text>
+          </Pressable>
+        )}
       </View>
 
       <GestureDetector gesture={swipe}>
@@ -226,8 +240,22 @@ export function HomeScreen() {
               </Pressable>
             )}
 
+            {profile && (
+              <WaterCard
+                date={selected}
+                targetMl={waterTargetMl(profile.weightKg)}
+                locked={!isEditableDay(selected, today)}
+              />
+            )}
+
+            {!isEditableDay(selected, today) && (
+              <Text style={styles.lockedNote}>
+                🔒 Past days are locked. Kimbo logs to today.
+              </Text>
+            )}
             <MealsList
               logs={logs}
+              locked={!isEditableDay(selected, today)}
               onAddToSlot={openKimboSheet}
               onEditItem={(log, item) => setEditing({ log, item })}
             />
@@ -249,6 +277,7 @@ export function HomeScreen() {
       )}
 
       <AppGuide />
+      <StreakPrompts />
 
       {editing && (
         <EditItemSheet
@@ -286,7 +315,19 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semiBold,
     color: colors.primary,
   },
-  weekStrip: { paddingHorizontal: spacing.sm, paddingVertical: spacing.md },
+  weekStrip: { paddingHorizontal: spacing.sm, paddingTop: spacing.md },
+  lockedNote: { fontSize: 14, opacity: 0.7, textAlign: 'center' },
+  progressLink: {
+    alignSelf: 'flex-end',
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+  },
+  progressLinkText: {
+    fontSize: 14,
+    fontFamily: fonts.bold,
+    color: colors.primary,
+  },
   body: { paddingHorizontal: spacing.lg, gap: spacing.md },
   card: {
     backgroundColor: colors.surface,

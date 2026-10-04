@@ -13,6 +13,9 @@ Built with React Native CLI (bare, new architecture, Hermes) and a small NestJS 
 - **Kimbo nudge.** One message a day from simple rules: what to log next, a protein tip in the evening (matched to your diet), "on track", or a gentle note when you're over. Past days get a one-line recap.
 - **First launch.** Until the first meal is saved, Home shows your plan ("3,030 kcal and 115 g protein a day") with a button to log the first meal.
 - **Profile.** Your targets and every answer, grouped and editable. Saving recalculates the targets and shows a small celebration with the new numbers. "Delete my data" removes everything from the phone and the server.
+- **Streak.** "🔥 6" on Home counts days in a row with at least one meal. One missed day per week is forgiven as a rest day 🌙. A small celebration after the first meal of each day.
+- **Progress.** Last 7 or 30 days: average calories and protein against target, days on target, a bar per day, most-logged foods, and "Kimbo's take": two sentences from Gemini written from the summary (cached for the day; a rule-based line when offline).
+- **First-time guide.** A three-step spotlight tour of the tab bar, with Skip.
 - **Works offline.** Meals and the profile live on the phone; the server copy catches up in the background.
 
 ## How targets are calculated
@@ -35,6 +38,10 @@ The app never holds an AI key. It sends the text and/or a compressed photo (max 
 If the description is too vague, Gemini returns one short question instead ("How many chapatis?"); your answer is sent back with the original text/photo.
 
 Timeouts: 15 s for text, 35 s for photos. Failures show a retry bubble; nothing is lost.
+
+## Insights
+
+`POST /insights` takes only numbers the app has already worked out (averages, days on target, calories per meal slot, top food names), never raw meal text. The server turns them into plain sentences ("Protein target reached on 0 of 6 logged days") before asking Gemini, so the model repeats facts instead of misreading numbers, and is told never to claim a target was met unless the facts say so.
 
 ## Data storage
 

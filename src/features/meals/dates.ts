@@ -69,6 +69,10 @@ export function formatShortDate(key: DateKey): string {
   }`;
 }
 
+// Today and yesterday can be changed (people log last night's dinner the next
+// morning); older days are read-only, so a streak can't be back-filled.
+export const isEditableDay = (date: DateKey, today: DateKey) =>
+  date >= addDays(today, -1);
 
 const SLOT_WORDS: [RegExp, MealSlot][] = [
   [/\bbreakfast\b/i, 'breakfast'],

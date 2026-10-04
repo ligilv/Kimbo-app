@@ -62,6 +62,14 @@ const notifyWritten = (id: string) => writtenListeners.forEach(listener => liste
 export const hasAnyLogs = () =>
   storage.getAllKeys().some(key => key.startsWith(PREFIX));
 
+// Every day with at least one meal (empty days have no key), oldest first.
+export const loggedDays = (): DateKey[] =>
+  storage
+    .getAllKeys()
+    .filter(key => key.startsWith(PREFIX))
+    .map(key => key.slice(PREFIX.length))
+    .sort();
+
 export function addLog(log: MealLog) {
   const logs = getLogsForDate(log.date);
   // Saving the same log twice (e.g. a double-tapped Save) keeps one copy.

@@ -62,8 +62,20 @@ function Piece({
   );
 }
 
+// Coloured dots bursting outward from the centre of the parent, once.
+export function ConfettiBurst() {
+  const burst = useSharedValue(0);
+  useEffect(() => {
+    burst.value = withTiming(1, {
+      duration: 900,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [burst]);
+  return PIECES.map((piece, i) => <Piece key={i} burst={burst} {...piece} />);
+}
+
 // Counts from one number to another, easing out, so the new target "lands".
-function useCountUp(from: number, to: number, duration = 900) {
+export function useCountUp(from: number, to: number, duration = 900) {
   const [value, setValue] = useState(from);
   useEffect(() => {
     const start = Date.now();
@@ -93,14 +105,6 @@ export function PlanUpdatedModal({
   const planChanged = kcalDelta !== 0 || after.proteinG !== before.proteinG;
   const kcal = useCountUp(before.calories, after.calories);
 
-  const burst = useSharedValue(0);
-  useEffect(() => {
-    burst.value = withTiming(1, {
-      duration: 900,
-      easing: Easing.out(Easing.cubic),
-    });
-  }, [burst]);
-
   return (
     <Modal transparent animationType="fade" onRequestClose={onClose}>
       <Pressable
@@ -115,9 +119,7 @@ export function PlanUpdatedModal({
           onStartShouldSetResponder={() => true}
         >
           <View style={styles.avatarWrap}>
-            {PIECES.map((piece, i) => (
-              <Piece key={i} burst={burst} {...piece} />
-            ))}
+            <ConfettiBurst />
             <Animated.Image
               entering={ZoomIn.delay(120).springify().damping(9)}
               source={require('@/assets/images/kimbo-avatar.png')}

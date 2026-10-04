@@ -5,7 +5,11 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { type DateKey, toLocalDateKey } from '@/features/meals/dates';
+import {
+  type DateKey,
+  isEditableDay,
+  toLocalDateKey,
+} from '@/features/meals/dates';
 import type { MealSlot } from '@/features/meals/types';
 import { openLogMeal } from '@/navigation/navigationRef';
 import { KimboSheet } from './KimboSheet';
@@ -40,7 +44,12 @@ export function KimboSheetProvider({ children }: { children: ReactNode }) {
       {children}
       {sheet && (
         <KimboSheet
-          date={selectedDate}
+          // Looking at a locked (older) day logs to today instead.
+          date={
+            isEditableDay(selectedDate, toLocalDateKey(new Date()))
+              ? selectedDate
+              : toLocalDateKey(new Date())
+          }
           slot={sheet.slot}
           onClose={() => setSheet(undefined)}
           onChoose={({ date, slot, mode, source }) => {

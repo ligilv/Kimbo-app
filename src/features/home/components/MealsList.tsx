@@ -19,9 +19,10 @@ type Props = {
   logs: MealLog[];
   onAddToSlot: (slot: MealSlot) => void;
   onEditItem: (log: MealLog, item: FoodItem) => void;
+  locked?: boolean; // an older day: shown, but nothing can be added or changed
 };
 
-export function MealsList({ logs, onAddToSlot, onEditItem }: Props) {
+export function MealsList({ logs, onAddToSlot, onEditItem, locked }: Props) {
   return (
     <View style={styles.list}>
       {MEAL_SLOTS.map(slot => {
@@ -36,7 +37,11 @@ export function MealsList({ logs, onAddToSlot, onEditItem }: Props) {
               )}
             </View>
 
-            {slotLogs.length === 0 ? (
+            {slotLogs.length === 0 && locked ? (
+              <Text style={[styles.emptyText, styles.lockedEmpty]}>
+                Nothing logged
+              </Text>
+            ) : slotLogs.length === 0 ? (
               <Pressable
                 onPress={() => onAddToSlot(slot)}
                 accessibilityRole="button"
@@ -59,12 +64,17 @@ export function MealsList({ logs, onAddToSlot, onEditItem }: Props) {
                   <Pressable
                     key={item.id}
                     onPress={() => onEditItem(log, item)}
-                    accessibilityRole="button"
+                    disabled={locked}
+                    accessibilityRole={locked ? 'text' : 'button'}
                     accessibilityLabel={`${item.name}, ${formatQuantity(
                       item.quantity,
                       item.unit,
                     )}, ${formatKcal(item.kcal)}`}
-                    accessibilityHint="Change the amount, move or delete it"
+                    accessibilityHint={
+                      locked
+                        ? undefined
+                        : 'Change the amount, move or delete it'
+                    }
                     style={({ pressed }) => [
                       styles.item,
                       pressed && styles.pressed,
@@ -123,6 +133,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emptyText: { fontSize: 15, opacity: 0.7 },
+  lockedEmpty: { paddingVertical: spacing.sm, opacity: 0.5 },
   item: {
     flexDirection: 'row',
     alignItems: 'center',

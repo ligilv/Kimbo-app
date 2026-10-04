@@ -11,6 +11,7 @@ import { HomeScreen } from '@/screens/HomeScreen';
 import { LogMealScreen } from '@/screens/LogMealScreen';
 import { OnboardingScreen } from '@/screens/OnboardingScreen';
 import { ProfileScreen } from '@/screens/ProfileScreen';
+import { ProgressScreen } from '@/screens/ProgressScreen';
 import { WelcomeScreen } from '@/screens/WelcomeScreen';
 import { colors, fonts, navigationTheme } from '@/theme';
 import { KimboTabButton } from './KimboTabButton';
@@ -83,6 +84,11 @@ const RootStack = createNativeStackNavigator({
       if: useIsOnboarded,
       screen: LogMealScreen,
       options: { headerShown: false, presentation: 'fullScreenModal' },
+    },
+    Progress: {
+      if: useIsOnboarded,
+      screen: ProgressScreen,
+      options: { headerShown: false },
     },
   },
 });

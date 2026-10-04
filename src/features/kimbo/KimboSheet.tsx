@@ -11,6 +11,7 @@ import {
   isToday,
 } from '@/features/meals/dates';
 import { SLOT_LABEL } from '@/features/meals/format';
+import { addWater, GLASS_ML } from '@/features/water/water';
 import { type MealSlot, MEAL_SLOTS } from '@/features/meals/types';
 import {
   requestCamera,
@@ -47,6 +48,12 @@ const OPTIONS: Option[] = [
     title: 'Type it',
     body: 'e.g. 2 chapatis and dal',
   },
+];
+
+const WATER_AMOUNTS = [
+  { label: '1 glass', ml: GLASS_ML },
+  { label: '2 glasses', ml: GLASS_ML * 2 },
+  { label: '500 ml', ml: 500 },
 ];
 
 type Props = {
@@ -189,6 +196,28 @@ export function KimboSheet({
             )}
           </View>
         ))}
+        <View style={styles.water}>
+          <Text style={styles.waterTitle}>💧 Add water</Text>
+          <View style={styles.waterChips}>
+            {WATER_AMOUNTS.map(({ label, ml }) => (
+              <Pressable
+                key={label}
+                onPress={() => {
+                  addWater(date, ml);
+                  onClose();
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={`Add ${label} of water`}
+                style={({ pressed }) => [
+                  styles.waterChip,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Text style={styles.waterChipText}>+ {label}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
       </View>
     </BottomSheet>
   );
@@ -243,4 +272,20 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   pressed: { opacity: 0.8 },
+  water: {
+    gap: spacing.sm,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(28, 43, 36, 0.08)',
+  },
+  waterTitle: { fontSize: 15, fontFamily: fonts.bold },
+  waterChips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  waterChip: {
+    minHeight: 44,
+    paddingHorizontal: spacing.lg,
+    justifyContent: 'center',
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(59, 130, 196, 0.12)',
+  },
+  waterChipText: { fontSize: 15, fontFamily: fonts.bold, color: '#2F6EA8' },
 });

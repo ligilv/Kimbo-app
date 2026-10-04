@@ -14,7 +14,8 @@ import { Text } from '@/components/Text';
 import { storage } from '@/storage';
 import { colors, fonts, radius, spacing } from '@/theme';
 
-const SEEN_KEY = 'guide.seen';
+export const GUIDE_SEEN_KEY = 'guide.seen';
+const SEEN_KEY = GUIDE_SEEN_KEY;
 const R = 44; // spotlight radius
 const DIM = 1600; // the dark ring's thickness: enough to cover any screen
 const KIMBO_LIFT = 64 / 3; // the centre button sits this far above the bar

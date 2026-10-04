@@ -4,6 +4,7 @@ import {
   slotFromText,
   formatDayLabel,
   getWeekDays,
+  isEditableDay,
   toLocalDateKey,
 } from '@/features/meals/dates';
 
@@ -60,4 +61,11 @@ test('a meal named in the text picks that slot', () => {
   // "lunchbox" isn't the meal; plain food text names no slot.
   expect(slotFromText('rice from my lunchbox')).toBeUndefined();
   expect(slotFromText('2 idli and sambar')).toBeUndefined();
+});
+
+test('only today and yesterday can be changed', () => {
+  expect(isEditableDay('2026-10-07', '2026-10-07')).toBe(true);
+  expect(isEditableDay('2026-10-06', '2026-10-07')).toBe(true);
+  expect(isEditableDay('2026-10-05', '2026-10-07')).toBe(false);
+  expect(isEditableDay('2026-09-30', '2026-10-01')).toBe(true); // across months
 });
