@@ -15,7 +15,7 @@ import { MacroBars } from '@/features/home/components/MacroBars';
 import { MealsList } from '@/features/home/components/MealsList';
 import { TargetExplanationSheet } from '@/features/home/components/TargetExplanationSheet';
 import { WeekStrip } from '@/features/home/components/WeekStrip';
-import { getNudge } from '@/features/home/nudge';
+import { getNudge, getWelcomePlan } from '@/features/home/nudge';
 import { useKimboSheet } from '@/features/kimbo/KimboSheetProvider';
 import {
   addDays,
@@ -25,7 +25,11 @@ import {
   toLocalDateKey,
 } from '@/features/meals/dates';
 import type { FoodItem, MealLog } from '@/features/meals/types';
-import { useDayLogs, useWeekTotals } from '@/features/meals/useMeals';
+import {
+  useDayLogs,
+  useHasAnyLogs,
+  useWeekTotals,
+} from '@/features/meals/useMeals';
 import {
   displayName,
   isComplete,
@@ -81,8 +85,11 @@ export function HomeScreen() {
   const swipe = useCompetingGestures(swipeNext, swipePrev);
 
   const isTodaySelected = selected === today;
+  const hasAnyLogs = useHasAnyLogs();
+  const welcome =
+    profile && targets && !hasAnyLogs ? getWelcomePlan(profile, targets) : null;
   const nudge =
-    profile && targets
+    profile && targets && hasAnyLogs
       ? getNudge(totals, targets, new Date(), {
           isToday: isTodaySelected,
           diet: profile.diet,
@@ -163,6 +170,35 @@ export function HomeScreen() {
                 />
               </View>
             )}
+
+            {welcome ? (
+              <View style={styles.card}>
+                <View style={styles.nudge}>
+                  <Image
+                    source={require('@/assets/images/kimbo-avatar.png')}
+                    style={styles.nudgeAvatar}
+                    accessibilityIgnoresInvertColors
+                  />
+                  <Text style={styles.welcomeTitle}>{welcome.title}</Text>
+                </View>
+                <View style={styles.welcomeBody}>
+                  <Text style={styles.welcomeGoal}>{welcome.goal}</Text>
+                  <Text style={styles.muted}>{welcome.reason}</Text>
+                </View>
+                <Pressable
+                  onPress={() => openKimboSheet()}
+                  accessibilityRole="button"
+                  style={({ pressed }) => [
+                    styles.welcomeButton,
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <Text style={styles.welcomeButtonText}>
+                    Log your first meal
+                  </Text>
+                </Pressable>
+              </View>
+            ) : null}
 
             {nudge && (
               <Pressable
@@ -254,6 +290,25 @@ const styles = StyleSheet.create({
   nudge: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   nudgeAvatar: { width: 40, height: 40, borderRadius: 20 },
   nudgeText: { flex: 1, fontSize: 15, fontFamily: fonts.semiBold },
+  welcomeTitle: { flex: 1, fontSize: 18, fontFamily: fonts.extraBold },
+  welcomeBody: { gap: spacing.xs },
+  welcomeGoal: {
+    fontSize: 20,
+    fontFamily: fonts.bold,
+    color: colors.primary,
+  },
+  welcomeButton: {
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.pill,
+    backgroundColor: colors.primary,
+  },
+  welcomeButtonText: {
+    fontSize: 16,
+    fontFamily: fonts.bold,
+    color: colors.surface,
+  },
   muted: { fontSize: 15, fontFamily: fonts.regular, opacity: 0.7 },
   pressed: { opacity: 0.8 },
 });

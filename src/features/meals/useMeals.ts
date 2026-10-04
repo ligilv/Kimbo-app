@@ -3,6 +3,7 @@ import { type DateKey, getWeekDays } from './dates';
 import {
   daySnapshot,
   getLogsForDate,
+  hasAnyLogs,
   subscribeToMeals,
   totalsForLogs,
 } from './mealStore';
@@ -36,3 +37,7 @@ export function useWeekTotals(anchor: DateKey): Record<DateKey, Nutrients> {
     );
   }, [days, snapshot]);
 }
+
+// Flips to true when the first meal is saved, wherever it's saved from.
+export const useHasAnyLogs = () =>
+  useSyncExternalStore(subscribeToMeals, hasAnyLogs);

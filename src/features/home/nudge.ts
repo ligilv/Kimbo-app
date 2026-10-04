@@ -1,6 +1,7 @@
 import { defaultSlotFor } from '@/features/meals/dates';
 import type { MealSlot, Nutrients } from '@/features/meals/types';
-import type { Diet } from '@/features/onboarding/types';
+import { displayName } from '@/features/onboarding/script';
+import type { Diet, Profile } from '@/features/onboarding/types';
 import type { Targets } from '@/features/onboarding/targets';
 
 export type Nudge = { text: string; slot?: MealSlot };
@@ -61,5 +62,26 @@ export function getNudge(
   return {
     text: `${kcalLeft.toLocaleString('en-IN')} kcal left today. Keep going!`,
     slot: defaultSlotFor(now),
+  };
+}
+
+const GOAL_REASON: Record<Profile['goal'], (t: Targets) => string> = {
+  lose: t => `to lose about ${t.kgPerWeek} kg a week`,
+  maintain: () => 'to keep your weight steady',
+  gain: t => `to gain about ${t.kgPerWeek} kg a week, mostly muscle`,
+};
+
+// Shown instead of the nudge until the very first meal is saved.
+export function getWelcomePlan(profile: Profile, targets: Targets) {
+  return {
+    title: `Here's your plan, ${displayName(profile)}`,
+    goal: `${targets.calories.toLocaleString('en-IN')} kcal and ${
+      targets.proteinG
+    }g protein a day`,
+    reason: `Worked out from your height, weight and activity${
+      targets.kgPerWeek > 0 || profile.goal === 'maintain'
+        ? `, ${GOAL_REASON[profile.goal](targets)}`
+        : ''
+    }.`,
   };
 }

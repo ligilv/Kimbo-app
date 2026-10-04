@@ -1,5 +1,6 @@
-import { getNudge } from '@/features/home/nudge';
+import { getNudge, getWelcomePlan } from '@/features/home/nudge';
 import type { Targets } from '@/features/onboarding/targets';
+import type { Profile } from '@/features/onboarding/types';
 
 const targets: Targets = {
   bmr: 1500,
@@ -61,4 +62,18 @@ test('past days get a short recap or nothing', () => {
     'Right on your calorie target that day.',
   );
   expect(getNudge(eaten(900, 40), targets, at(10), pastDay)).toBeNull();
+});
+
+test('welcome plan states the targets and why', () => {
+  const profile = { name: 'ligil', goal: 'lose' } as Profile;
+  expect(getWelcomePlan(profile, { ...targets, kgPerWeek: 0.5 })).toEqual({
+    title: "Here's your plan, Ligil",
+    goal: '1,800 kcal and 100g protein a day',
+    reason:
+      'Worked out from your height, weight and activity, to lose about 0.5 kg a week.',
+  });
+  // Calorie floor reached: no weekly rate to promise.
+  expect(getWelcomePlan(profile, targets).reason).toBe(
+    'Worked out from your height, weight and activity.',
+  );
 });
