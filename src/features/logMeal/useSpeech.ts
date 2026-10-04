@@ -11,6 +11,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 const LANGUAGE = 'en-IN';
 const NOTHING_HEARD_MS = 6_000;
 const MAX_LISTEN_MS = 30_000;
+// Android sends "speech ended" a moment BEFORE the final words, and short
+// phrases ("idli") have no live words first. Wait this long for late words
+// before deciding nothing was heard.
+const LATE_RESULT_MS = 1_000;
 
 type Handlers = {
   onText: (text: string) => void; // live words while speaking, then the final words
@@ -55,8 +59,13 @@ export function useSpeech(handlers: Handlers) {
     const end = addSpeechEndListener(() => {
       clearTimers();
       setListening(false);
-      if (!heard.current) latest.current.onNothingHeard();
-      heard.current = true;
+      if (heard.current) return;
+      timers.current.push(
+        setTimeout(() => {
+          if (!heard.current) latest.current.onNothingHeard();
+          heard.current = true; // report "nothing heard" once per try
+        }, LATE_RESULT_MS),
+      );
     });
     return () => {
       result.remove();
@@ -68,6 +77,7 @@ export function useSpeech(handlers: Handlers) {
   }, []);
 
   const startListening = useCallback(async () => {
+    clearTimers(); // drop a pending "nothing heard" check from the last try
     heard.current = false;
     try {
       await start({ language: LANGUAGE });

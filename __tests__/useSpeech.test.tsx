@@ -70,6 +70,10 @@ test('stops by itself and says so when nothing is heard for 6 seconds', async ()
   });
   expect(STT.stop).toHaveBeenCalled();
   await ReactTestRenderer.act(() => s.emitEnd()); // the library sends "end" after stop
+  expect(s.handlers.onNothingHeard).not.toHaveBeenCalled(); // waits for late words first
+  await ReactTestRenderer.act(() => {
+    jest.advanceTimersByTime(1_000);
+  });
   expect(s.handlers.onNothingHeard).toHaveBeenCalledTimes(1);
   await s.unmount();
 });
@@ -91,5 +95,18 @@ test('a failed start is reported instead of crashing', async () => {
   await ReactTestRenderer.act(() => s.api().startListening());
   expect(s.handlers.onError).toHaveBeenCalledWith('start-failed');
   expect(s.api().listening).toBe(false);
+  await s.unmount();
+});
+
+test('words arriving just after "speech ended" are kept, with no "didn\u2019t catch that"', async () => {
+  const s = await setup();
+  await ReactTestRenderer.act(() => s.api().startListening());
+  await ReactTestRenderer.act(() => s.emitEnd()); // Android: end first...
+  await ReactTestRenderer.act(() => s.emitResult('idli')); // ...then the final words
+  await ReactTestRenderer.act(() => {
+    jest.advanceTimersByTime(2_000);
+  });
+  expect(s.handlers.onText).toHaveBeenCalledWith('idli');
+  expect(s.handlers.onNothingHeard).not.toHaveBeenCalled();
   await s.unmount();
 });
