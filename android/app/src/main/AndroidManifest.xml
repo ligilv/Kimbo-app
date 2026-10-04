@@ -7,6 +7,13 @@
     <!-- Camera is optional: typing a meal still works, so don't hide the app from camera-less devices -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
+    <!-- Android 11+: lets the app find the phone's speech recogniser for voice logging -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
+
     <application
       android:name=".MainApplication"
       android:label="@string/app_name"
