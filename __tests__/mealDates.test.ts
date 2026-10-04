@@ -1,6 +1,7 @@
 import {
   addDays,
   defaultSlotFor,
+  slotFromText,
   formatDayLabel,
   getWeekDays,
   toLocalDateKey,
@@ -49,4 +50,14 @@ test('default meal slot follows the time of day', () => {
   expect(at(16)).toBe('snacks');
   expect(at(19)).toBe('dinner');
   expect(at(23, 59)).toBe('dinner');
+});
+
+test('a meal named in the text picks that slot', () => {
+  expect(slotFromText('two chapati for dinner')).toBe('dinner');
+  expect(slotFromText('Samosa as a snack')).toBe('snacks');
+  expect(slotFromText('poha at BREAKFAST')).toBe('breakfast');
+  expect(slotFromText('lunch was dal, then a dinner roll')).toBe('lunch');
+  // "lunchbox" isn't the meal; plain food text names no slot.
+  expect(slotFromText('rice from my lunchbox')).toBeUndefined();
+  expect(slotFromText('2 idli and sambar')).toBeUndefined();
 });

@@ -1,9 +1,11 @@
+import { useNavigation } from '@react-navigation/native';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomSheet } from '@/components/BottomSheet';
 import { Text } from '@/components/Text';
+import { replayGuide } from '@/features/guide/AppGuide';
 import { getWelcomePlan } from '@/features/home/nudge';
 import { Composer } from '@/features/onboarding/components/Composer';
 import {
@@ -46,7 +48,7 @@ const GROUPS = [
 ];
 
 // Details for testing on a phone or reporting a bug.
-const showBuildInfo = () =>
+const showBuildInfo = (onReplayGuide: () => void) =>
   Alert.alert(
     'About this build',
     [
@@ -55,11 +57,18 @@ const showBuildInfo = () =>
       `Changes waiting to sync: ${readOutbox().length}`,
       `Device ID: ${getDeviceId().slice(0, 8)}`,
     ].join('\n'),
+    __DEV__
+      ? [
+          { text: 'Show app guide again', onPress: onReplayGuide },
+          { text: 'OK' },
+        ]
+      : undefined,
   );
 
 const n = (value: number) => value.toLocaleString('en-IN');
 
 export function ProfileScreen() {
+  const navigation = useNavigation();
   const [answers, update] = useAnswers();
   // The question being edited, plus answers given but not saved yet. Changing the
   // goal or weight can make the target weight point the wrong way; then the target
@@ -167,7 +176,12 @@ export function ProfileScreen() {
           Delete my data
         </Text>
         <Text
-          onPress={showBuildInfo}
+          onPress={() =>
+            showBuildInfo(() => {
+              replayGuide();
+              navigation.navigate('MainTabs', { screen: 'Home' }); // the guide lives on Home
+            })
+          }
           accessibilityRole="button"
           accessibilityHint="Shows build details"
           suppressHighlighting

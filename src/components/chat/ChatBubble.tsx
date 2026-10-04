@@ -24,18 +24,13 @@ type UserBubbleProps = {
 };
 
 export function UserBubble({ text, editing, onPress }: UserBubbleProps) {
-  if (!onPress) {
-    return (
-      <View style={[styles.bubble, styles.userBubble]}>
-        <Text style={styles.userText}>{text}</Text>
-      </View>
-    );
-  }
+  // Without onPress (Log Meal) the bubble is plain text, not a button.
   return (
     <Pressable
       onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`${text}. Double tap to change`}
+      disabled={!onPress}
+      accessibilityRole={onPress ? 'button' : 'text'}
+      accessibilityLabel={onPress ? `${text}. Double tap to change` : text}
       style={({ pressed }) => [
         styles.bubble,
         styles.userBubble,
@@ -83,7 +78,7 @@ const styles = StyleSheet.create({
   userText: {
     fontSize: 16,
     lineHeight: 22,
-    fontFamily: fonts.semiBold,
+    fontFamily: fonts.regular,
     color: colors.background,
   },
   pressed: { opacity: 0.85 },

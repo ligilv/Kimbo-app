@@ -1,5 +1,10 @@
 import { useCallback, useRef, useState } from 'react';
-import { type DateKey, formatDayLabel, isToday } from '@/features/meals/dates';
+import {
+  type DateKey,
+  formatDayLabel,
+  isToday,
+  slotFromText,
+} from '@/features/meals/dates';
 import { SLOT_LABEL } from '@/features/meals/format';
 import { addLog, newId, sumNutrients } from '@/features/meals/mealStore';
 import type { MealSlot } from '@/features/meals/types';
@@ -125,6 +130,9 @@ export function useMealChat(date: DateKey, initialSlot?: MealSlot) {
     const trimmed = text.trim();
     if (thinking || (!trimmed && !photo)) return;
     if (trimmed) push({ id: newId(), kind: 'user', text: trimmed });
+    // "...for dinner" picks the dinner chip; the user can still change it.
+    const mentioned = slotFromText(trimmed);
+    if (mentioned) setSlotState(mentioned);
 
     if (photo) {
       setPhoto(null);

@@ -14,6 +14,7 @@ import { EditItemSheet } from '@/features/home/components/EditItemSheet';
 import { MacroBars } from '@/features/home/components/MacroBars';
 import { MealsList } from '@/features/home/components/MealsList';
 import { TargetExplanationSheet } from '@/features/home/components/TargetExplanationSheet';
+import { AppGuide } from '@/features/guide/AppGuide';
 import { WeekStrip } from '@/features/home/components/WeekStrip';
 import { getNudge, getWelcomePlan } from '@/features/home/nudge';
 import { useKimboSheet } from '@/features/kimbo/KimboSheetProvider';
@@ -246,6 +247,8 @@ export function HomeScreen() {
           }}
         />
       )}
+
+      <AppGuide />
 
       {editing && (
         <EditItemSheet

@@ -69,11 +69,26 @@ export function formatShortDate(key: DateKey): string {
   }`;
 }
 
-// Which meal someone is probably logging right now.
+
+const SLOT_WORDS: [RegExp, MealSlot][] = [
+  [/\bbreakfast\b/i, 'breakfast'],
+  [/\blunch\b/i, 'lunch'],
+  [/\bsnacks?\b/i, 'snacks'],
+  [/\b(dinner|supper)\b/i, 'dinner'],
+];
+export function slotFromText(text: string): MealSlot | undefined {
+  let best: { at: number; slot: MealSlot } | undefined;
+  for (const [pattern, slot] of SLOT_WORDS) {
+    const at = text.search(pattern);
+    if (at >= 0 && (!best || at < best.at)) best = { at, slot };
+  }
+  return best?.slot;
+}
+
 export function defaultSlotFor(now = new Date()): MealSlot {
   const hour = now.getHours();
   if (hour < 11) return 'breakfast';
   if (hour < 16) return 'lunch';
-  if (hour < 19) return 'snacks'; 
+  if (hour < 19) return 'snacks';
   return 'dinner';
 }

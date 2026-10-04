@@ -4,8 +4,8 @@ import {
   type StaticParamList,
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { House, UserRound } from 'lucide-react-native';
-import { View } from 'react-native';
+import { House, type LucideIcon, UserRound } from 'lucide-react-native';
+import { StyleSheet, View } from 'react-native';
 import { useIsOnboarded } from '@/features/onboarding/useOnboarding';
 import { HomeScreen } from '@/screens/HomeScreen';
 import { LogMealScreen } from '@/screens/LogMealScreen';
@@ -20,12 +20,22 @@ const useNeedsOnboarding = () => !useIsOnboarded();
 
 const NoScreen = () => <View />;
 
+// The selected tab gets a filled pill behind its icon, so it reads at a glance.
+const tabIcon =
+  (Icon: LucideIcon) =>
+  ({ focused, color }: { focused: boolean; color: string }) =>
+    (
+      <View style={[styles.pill, focused && styles.pillOn]}>
+        <Icon color={color} size={22} strokeWidth={focused ? 2.5 : 2} />
+      </View>
+    );
+
 const MainTabs = createBottomTabNavigator({
   screenOptions: {
     headerShown: false,
     tabBarActiveTintColor: colors.primary,
-    tabBarInactiveTintColor: 'rgba(28, 43, 36, 0.5)',
-    tabBarLabelStyle: { fontFamily: fonts.semiBold, fontSize: 12 },
+    tabBarInactiveTintColor: 'rgba(28, 43, 36, 0.45)',
+    tabBarLabelStyle: { fontFamily: fonts.bold, fontSize: 12 },
     tabBarStyle: {
       backgroundColor: colors.background,
       borderTopColor: 'rgba(28, 43, 36, 0.12)',
@@ -35,7 +45,7 @@ const MainTabs = createBottomTabNavigator({
     Home: {
       screen: HomeScreen,
       options: {
-        tabBarIcon: ({ color, size }) => <House color={color} size={size} />,
+        tabBarIcon: tabIcon(House),
       },
     },
     Kimbo: {
@@ -46,9 +56,7 @@ const MainTabs = createBottomTabNavigator({
     Profile: {
       screen: ProfileScreen,
       options: {
-        tabBarIcon: ({ color, size }) => (
-          <UserRound color={color} size={size} />
-        ),
+        tabBarIcon: tabIcon(UserRound),
       },
     },
   },
@@ -84,6 +92,17 @@ const StaticNavigation = createStaticNavigation(RootStack);
 export function Navigation() {
   return <StaticNavigation ref={navigationRef} theme={navigationTheme} />;
 }
+
+const styles = StyleSheet.create({
+  pill: {
+    width: 56,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pillOn: { backgroundColor: 'rgba(31, 77, 58, 0.14)' },
+});
 
 type RootStackParamList = StaticParamList<typeof RootStack>;
 
