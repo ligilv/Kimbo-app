@@ -8,6 +8,7 @@ type Props = {
   onSend: () => void;
   placeholder: string;
   disabled?: boolean;
+  allowEmpty?: boolean;
 };
 
 // Text box + send button for chat screens. (Onboarding keeps its own composer.)
@@ -17,8 +18,9 @@ export function ChatInput({
   onSend,
   placeholder,
   disabled,
+  allowEmpty,
 }: Props) {
-  const canSend = !disabled && value.trim().length > 0;
+  const canSend = !disabled && (allowEmpty || value.trim().length > 0);
   return (
     <View style={styles.row}>
       <TextInput

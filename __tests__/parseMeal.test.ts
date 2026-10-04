@@ -141,3 +141,27 @@ describe('mock parser', () => {
     });
   });
 });
+
+test('a photo is sent as base64 with its type, plus the optional note', async () => {
+  const seen: { url?: string; body?: unknown } = {};
+  const capture = ((url: string, init: RequestInit) => {
+    seen.url = url;
+    seen.body = JSON.parse(String(init.body));
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ items: [], clarification: 'Which dish?' }),
+    });
+  }) as unknown as typeof fetch;
+  const photo = {
+    uri: 'file:///plate.jpg',
+    base64: 'abc123',
+    mimeType: 'image/jpeg' as const,
+  };
+  await parseOnServer({ text: 'no ghee', photo }, capture);
+  expect(seen.url).toMatch(/\/meals\/parse$/);
+  expect(seen.body).toEqual({
+    text: 'no ghee',
+    image: { base64: 'abc123', mimeType: 'image/jpeg' },
+  });
+});

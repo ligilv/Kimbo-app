@@ -4,12 +4,13 @@ import { SLOT_LABEL } from '@/features/meals/format';
 import { addLog, newId, sumNutrients } from '@/features/meals/mealStore';
 import type { MealSlot } from '@/features/meals/types';
 import { type DraftRow, rowItem } from './ConfirmationCard';
-import { parseMeal } from './parseMeal';
+import { type MealPhoto, type ParseInput, parseMeal } from './parseMeal';
 
 export type ChatMessage =
   | { id: string; kind: 'kimbo'; text: string }
   | { id: string; kind: 'user'; text: string }
-  | { id: string; kind: 'error'; text: string; retryQuery: string }
+  | { id: string; kind: 'photo'; uri: string }
+  | { id: string; kind: 'error'; text: string; retry: ParseInput }
   | {
       id: string;
       kind: 'card';
@@ -25,6 +26,9 @@ const ERRORS = {
   timeout: 'That took too long to work out. Try again?',
   invalid: 'Something went wrong reading that. Try again?',
 };
+
+const PHOTO_PROMPT =
+  'Got it! Anything I can\u2019t see, like ghee or sugar in the tea? Add a note below, or just send.';
 
 const NO_FOOD =
   "Hmm, I couldn't spot any food in that. Try something like “2 chapatis, dal and a bowl of curd”.";
@@ -44,8 +48,13 @@ export function useMealChat(date: DateKey, initialSlot?: MealSlot) {
   ]);
   const [thinking, setThinking] = useState(false);
   const [saving, setSaving] = useState(false);
-  // When Kimbo asked a follow-up, the next message is sent together with the original.
-  const pending = useRef<{ base: string; question: string } | null>(null);
+  const pending = useRef<{
+    base: string;
+    question: string;
+    photo?: MealPhoto;
+  } | null>(null);
+  // A photo taken but not sent yet, waiting for an optional note.
+  const [photo, setPhoto] = useState<MealPhoto | null>(null);
 
   const push = (message: ChatMessage) => setMessages(m => [...m, message]);
 
@@ -55,9 +64,10 @@ export function useMealChat(date: DateKey, initialSlot?: MealSlot) {
     setSlotState(next);
   };
 
-  const run = useCallback(async (query: string) => {
+  const run = useCallback(async (input: ParseInput) => {
+    const query = input.text ?? '';
     setThinking(true);
-    const result = await parseMeal({ text: query });
+    const result = await parseMeal(input);
     setThinking(false);
 
     if (!result.ok) {
@@ -65,13 +75,17 @@ export function useMealChat(date: DateKey, initialSlot?: MealSlot) {
         id: newId(),
         kind: 'error',
         text: ERRORS[result.reason],
-        retryQuery: query,
+        retry: input,
       });
       return;
     }
     const { items, clarification } = result.data;
     if (clarification) {
-      pending.current = { base: query, question: clarification };
+      pending.current = {
+        base: query,
+        question: clarification,
+        photo: input.photo,
+      };
       push({ id: newId(), kind: 'kimbo', text: clarification });
       return;
     }
@@ -89,7 +103,7 @@ export function useMealChat(date: DateKey, initialSlot?: MealSlot) {
       id: newId(),
       kind: 'card',
       logId: newId(), // fixed per card, so saving it twice still writes one log
-      rawText: query.split('\nAnswer to')[0],
+      rawText: query.split('\nAnswer to')[0] || 'Photo of my meal',
       saved: false,
       rows: items.map(item => ({
         base: { ...item, id: newId() },
@@ -98,18 +112,38 @@ export function useMealChat(date: DateKey, initialSlot?: MealSlot) {
     });
   }, []);
 
-  const send = (text: string) => {
-    const trimmed = text.trim();
-    if (!trimmed || thinking) return;
-    push({ id: newId(), kind: 'user', text: trimmed });
-    const query = pending.current
-      ? `${pending.current.base}\nAnswer to "${pending.current.question}": ${trimmed}`
-      : trimmed;
-    run(query);
+  const say = (text: string) => push({ id: newId(), kind: 'kimbo', text });
+
+  const attachPhoto = (next: MealPhoto) => {
+    pending.current = null; // a new photo starts a new question
+    setPhoto(next);
+    push({ id: newId(), kind: 'photo', uri: next.uri });
+    push({ id: newId(), kind: 'kimbo', text: PHOTO_PROMPT });
   };
 
-  const retry = (query: string) => {
-    if (!thinking) run(query);
+  const send = (text: string) => {
+    const trimmed = text.trim();
+    if (thinking || (!trimmed && !photo)) return;
+    if (trimmed) push({ id: newId(), kind: 'user', text: trimmed });
+
+    if (photo) {
+      setPhoto(null);
+      run({ text: trimmed || undefined, photo });
+      return;
+    }
+    const followUp = pending.current;
+    run(
+      followUp
+        ? {
+            text: `${followUp.base}\nAnswer to "${followUp.question}": ${trimmed}`,
+            photo: followUp.photo,
+          }
+        : { text: trimmed },
+    );
+  };
+
+  const retry = (input: ParseInput) => {
+    if (!thinking) run(input);
   };
 
   const updateCard = (id: string, change: (rows: DraftRow[]) => DraftRow[]) =>
@@ -178,6 +212,9 @@ export function useMealChat(date: DateKey, initialSlot?: MealSlot) {
     slot,
     setSlot,
     messages,
+    photo,
+    attachPhoto,
+    say,
     thinking,
     saving,
     send,

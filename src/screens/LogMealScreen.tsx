@@ -2,8 +2,8 @@ import {
   type StaticScreenProps,
   useNavigation,
 } from '@react-navigation/native';
-import { X } from 'lucide-react-native';
-import { useRef, useState } from 'react';
+import { Camera, ImageIcon, X } from 'lucide-react-native';
+import { useEffect, useRef, useState } from 'react';
 import {
   Image,
   KeyboardAvoidingView,
@@ -21,6 +21,11 @@ import { ChatInput } from '@/components/chat/ChatInput';
 import { TypingIndicator } from '@/components/chat/TypingIndicator';
 import { Text } from '@/components/Text';
 import { ConfirmationCard } from '@/features/logMeal/ConfirmationCard';
+import {
+  type PhotoResult,
+  pickPhoto,
+  takePhoto,
+} from '@/features/logMeal/photo';
 import { useMealChat } from '@/features/logMeal/useMealChat';
 import {
   defaultSlotFor,
@@ -29,12 +34,14 @@ import {
 } from '@/features/meals/dates';
 import { SLOT_LABEL } from '@/features/meals/format';
 import { type MealSlot, MEAL_SLOTS } from '@/features/meals/types';
+import { requestCamera } from '@/features/permissions/mediaPermissions';
 import { colors, fonts, radius, spacing } from '@/theme';
 
 type Props = StaticScreenProps<{
   date: string;
   slot?: MealSlot;
-  mode?: 'text' | 'photo' | 'voice'; // photo / voice arrive in Phases 5B / 5C
+  mode?: 'text' | 'photo' | 'voice'; // voice arrives in Phase 5C
+  source?: 'camera' | 'gallery'; // for photo mode
 }>;
 
 const BACK_TO_HOME_MS = 1200;
@@ -58,6 +65,40 @@ export function LogMealScreen({ route }: Props) {
     chat.send(draft);
     setDraft('');
   };
+
+  const handlePhoto = (result: PhotoResult) => {
+    if (result.kind === 'photo') chat.attachPhoto(result.photo);
+    else if (result.kind === 'cancelled')
+      chat.say(
+        'No photo yet. Take one, pick from your gallery, or just type what you had.',
+      );
+    else
+      chat.say(
+        "I couldn't open that photo. Try again, or type what you had instead.",
+      );
+  };
+
+  const openCamera = async () => {
+    // Asked again here in case it was turned off since the sheet.
+    if (!(await requestCamera())) {
+      chat.say(
+        'Camera access is off. Pick a photo from your gallery, or allow the camera in Settings.',
+      );
+      return;
+    }
+    handlePhoto(await takePhoto());
+  };
+  const openGallery = async () => handlePhoto(await pickPhoto());
+
+  const isPhotoMode = route.params.mode === 'photo';
+  useEffect(() => {
+    if (!isPhotoMode) return;
+    const timer = setTimeout(() => {
+      if (route.params.source === 'gallery') openGallery();
+      else openCamera();
+    }, 350);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
@@ -99,8 +140,14 @@ export function LogMealScreen({ route }: Props) {
           {chat.messages.map(message => (
             <Animated.View key={message.id} entering={FadeInDown.duration(220)}>
               {message.kind === 'kimbo' && <KimboBubble text={message.text} />}
+              {message.kind === 'photo' && (
+                <Image
+                  source={{ uri: message.uri }}
+                  style={styles.photo}
+                  accessibilityLabel="Your meal photo"
+                />
+              )}
               {message.kind === 'user' && (
-                // Not editable here: tapping does nothing beyond the bubble's press state.
                 <UserBubble
                   text={message.text}
                   editing={false}
@@ -111,7 +158,7 @@ export function LogMealScreen({ route }: Props) {
                 <View style={styles.errorBlock}>
                   <KimboBubble text={message.text} />
                   <Pressable
-                    onPress={() => chat.retry(message.retryQuery)}
+                    onPress={() => chat.retry(message.retry)}
                     accessibilityRole="button"
                     style={styles.retry}
                   >
@@ -167,13 +214,42 @@ export function LogMealScreen({ route }: Props) {
               </Pressable>
             ))}
           </ScrollView>
+          {isPhotoMode && (
+            <View style={styles.photoActions}>
+              <Pressable
+                onPress={openCamera}
+                disabled={chat.thinking}
+                accessibilityRole="button"
+                style={styles.photoAction}
+              >
+                <Camera size={18} color={colors.primary} />
+                <Text style={styles.photoActionText}>
+                  {chat.photo ? 'Retake' : 'Take photo'}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={openGallery}
+                disabled={chat.thinking}
+                accessibilityRole="button"
+                style={styles.photoAction}
+              >
+                <ImageIcon size={18} color={colors.primary} />
+                <Text style={styles.photoActionText}>Gallery</Text>
+              </Pressable>
+            </View>
+          )}
           <ChatInput
             value={draft}
             onChangeText={setDraft}
             onSend={send}
             disabled={chat.thinking || !chat.slot}
+            allowEmpty={!!chat.photo}
             placeholder={
-              chat.slot ? 'e.g. 2 chapatis, dal and curd' : 'Pick a meal first'
+              !chat.slot
+                ? 'Pick a meal first'
+                : chat.photo
+                ? 'Add a note (optional), e.g. no ghee'
+                : 'e.g. 2 chapatis, dal and curd'
             }
           />
         </View>
@@ -223,6 +299,28 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   slots: { gap: spacing.sm },
+  photo: {
+    alignSelf: 'flex-end',
+    width: 220,
+    height: 220,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+  },
+  photoActions: { flexDirection: 'row', gap: spacing.sm },
+  photoAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 40,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(242, 163, 58, 0.2)',
+  },
+  photoActionText: {
+    fontSize: 15,
+    fontFamily: fonts.semiBold,
+    color: colors.primary,
+  },
   slot: {
     minHeight: 40,
     justifyContent: 'center',

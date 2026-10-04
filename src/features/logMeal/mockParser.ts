@@ -72,8 +72,16 @@ const findFood = (chunk: string) =>
 const plural = (name: string) =>
   `${name.toLowerCase()}${name.endsWith('s') ? '' : 's'}`;
 
-export async function mockParseMeal(text: string): Promise<ParseMealResponse> {
-  await new Promise<void>(resolve => setTimeout(resolve, 700)); // feel like a network call
+export async function mockParseMeal(
+  text: string,
+  hasPhoto = false,
+): Promise<ParseMealResponse> {
+  await new Promise<void>(resolve =>
+    setTimeout(resolve, hasPhoto ? 1500 : 700),
+  ); // feel like a network call
+
+  // The mock can't see photos: it always "recognises" the same plate.
+  if (hasPhoto) return MOCK_MEALS.dalRoti.response;
 
   // A follow-up answer arrives as: <original text>\nAnswer to "<question>": <answer>
   const [original, followUp] = text.toLowerCase().split('\nanswer to');

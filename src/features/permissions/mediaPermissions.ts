@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { AppState, Platform } from 'react-native';
 import {
   checkMultiple,
+  request as requestPermission,
   PERMISSIONS,
   type PermissionStatus,
   requestMultiple,
@@ -53,4 +54,8 @@ export function useMediaPermissions() {
   }, []);
 
   return { statuses, request };
+}
+
+export async function requestCamera(): Promise<boolean> {
+  return isGranted(await requestPermission(CAMERA));
 }

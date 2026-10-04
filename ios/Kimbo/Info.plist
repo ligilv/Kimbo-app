@@ -36,6 +36,8 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Kimbo uses your camera to log a meal from a photo of your plate.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Kimbo lets you pick a photo of your meal from your library to log it.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Kimbo uses your microphone so you can log a meal by saying what you ate.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

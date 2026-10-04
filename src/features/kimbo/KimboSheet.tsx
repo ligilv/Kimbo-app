@@ -1,6 +1,6 @@
 import { Camera, type LucideIcon, Keyboard, Mic } from 'lucide-react-native';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, View } from 'react-native';
 import { BottomSheet } from '@/components/BottomSheet';
 import { IconBadge } from '@/components/IconBadge';
 import { Text } from '@/components/Text';
@@ -12,9 +12,11 @@ import {
 } from '@/features/meals/dates';
 import { SLOT_LABEL } from '@/features/meals/format';
 import { type MealSlot, MEAL_SLOTS } from '@/features/meals/types';
+import { requestCamera } from '@/features/permissions/mediaPermissions';
 import { colors, fonts, radius, spacing } from '@/theme';
 
 export type LogMode = 'photo' | 'voice' | 'text';
+export type PhotoSource = 'camera' | 'gallery';
 
 type Option = {
   mode: LogMode;
@@ -24,15 +26,15 @@ type Option = {
   ready: boolean;
 };
 
-// Photo and voice arrive in Phases 5B / 5C. Until then they show as "Coming soon",
-// never as buttons that do nothing.
+// Voice arrives in Phase 5C. Until then it shows as "Coming soon", never as a
+// button that does nothing.
 const OPTIONS: Option[] = [
   {
     mode: 'photo',
     icon: Camera,
     title: 'Snap your plate',
     body: 'Take or pick a photo',
-    ready: false,
+    ready: true,
   },
   {
     mode: 'voice',
@@ -54,7 +56,12 @@ type Props = {
   date: DateKey;
   slot?: MealSlot;
   onClose: () => void;
-  onChoose: (choice: { date: DateKey; slot: MealSlot; mode: LogMode }) => void;
+  onChoose: (choice: {
+    date: DateKey;
+    slot: MealSlot;
+    mode: LogMode;
+    source?: PhotoSource;
+  }) => void;
 };
 
 export function KimboSheet({
@@ -64,6 +71,13 @@ export function KimboSheet({
   onChoose,
 }: Props) {
   const [slot, setSlot] = useState<MealSlot>(initialSlot ?? defaultSlotFor());
+  const [cameraOff, setCameraOff] = useState(false);
+
+  const choose = async (mode: LogMode) => {
+    if (mode !== 'photo') return onChoose({ date, slot, mode });
+    if (await requestCamera()) onChoose({ date, slot, mode, source: 'camera' });
+    else setCameraOff(true);
+  };
 
   return (
     <BottomSheet visible onClose={onClose}>
@@ -96,32 +110,56 @@ export function KimboSheet({
         </View>
 
         {OPTIONS.map(option => (
-          <Pressable
-            key={option.mode}
-            onPress={() => onChoose({ date, slot, mode: option.mode })}
-            disabled={!option.ready}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !option.ready }}
-            accessibilityLabel={`${option.title}${
-              option.ready ? '' : ', coming soon'
-            }`}
-            style={({ pressed }) => [
-              styles.option,
-              !option.ready && styles.optionSoon,
-              pressed && styles.pressed,
-            ]}
-          >
-            <IconBadge icon={option.icon} />
-            <View style={styles.optionText}>
-              <Text style={styles.optionTitle}>{option.title}</Text>
-              <Text style={styles.optionBody}>{option.body}</Text>
-            </View>
-            {!option.ready && (
-              <View style={styles.soonTag}>
-                <Text style={styles.soonText}>Coming soon</Text>
+          <View key={option.mode} style={styles.optionWrap}>
+            <Pressable
+              onPress={() => choose(option.mode)}
+              disabled={!option.ready}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !option.ready }}
+              accessibilityLabel={`${option.title}${
+                option.ready ? '' : ', coming soon'
+              }`}
+              style={({ pressed }) => [
+                styles.option,
+                !option.ready && styles.optionSoon,
+                pressed && styles.pressed,
+              ]}
+            >
+              <IconBadge icon={option.icon} />
+              <View style={styles.optionText}>
+                <Text style={styles.optionTitle}>{option.title}</Text>
+                <Text style={styles.optionBody}>{option.body}</Text>
+              </View>
+              {!option.ready && (
+                <View style={styles.soonTag}>
+                  <Text style={styles.soonText}>Coming soon</Text>
+                </View>
+              )}
+            </Pressable>
+            {option.mode === 'photo' && cameraOff && (
+              <View style={styles.cameraOff}>
+                <Text style={styles.cameraOffText}>Camera access is off.</Text>
+                <View style={styles.cameraOffActions}>
+                  <Pressable
+                    onPress={() => Linking.openSettings()}
+                    accessibilityRole="button"
+                    style={styles.linkButton}
+                  >
+                    <Text style={styles.linkText}>Allow in Settings</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() =>
+                      onChoose({ date, slot, mode: 'photo', source: 'gallery' })
+                    }
+                    accessibilityRole="button"
+                    style={styles.linkButton}
+                  >
+                    <Text style={styles.linkText}>Pick from gallery</Text>
+                  </Pressable>
+                </View>
               </View>
             )}
-          </Pressable>
+          </View>
         ))}
       </View>
     </BottomSheet>
@@ -169,5 +207,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(31, 77, 58, 0.1)',
   },
   soonText: { fontSize: 12, fontFamily: fonts.semiBold, color: colors.primary },
+  optionWrap: { gap: spacing.xs },
+  cameraOff: { paddingHorizontal: spacing.lg, gap: 2 },
+  cameraOffText: { fontSize: 14, opacity: 0.75 },
+  cameraOffActions: { flexDirection: 'row', gap: spacing.lg },
+  linkButton: { minHeight: 44, justifyContent: 'center' },
+  linkText: {
+    fontSize: 15,
+    fontFamily: fonts.bold,
+    color: colors.primary,
+    textDecorationLine: 'underline',
+  },
   pressed: { opacity: 0.8 },
 });

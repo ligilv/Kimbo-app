@@ -13,6 +13,7 @@ export function openLogMeal(params: {
   date: DateKey;
   slot?: MealSlot;
   mode?: 'text' | 'photo' | 'voice';
+  source?: 'camera' | 'gallery';
 }) {
   if (navigationRef.isReady()) navigationRef.navigate('LogMeal', params);
 }

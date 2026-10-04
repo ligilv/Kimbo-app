@@ -43,9 +43,9 @@ export function KimboSheetProvider({ children }: { children: ReactNode }) {
           date={selectedDate}
           slot={sheet.slot}
           onClose={() => setSheet(undefined)}
-          onChoose={({ date, slot, mode }) => {
+          onChoose={({ date, slot, mode, source }) => {
             setSheet(undefined);
-            openLogMeal({ date, slot, mode });
+            openLogMeal({ date, slot, mode, source });
           }}
         />
       )}

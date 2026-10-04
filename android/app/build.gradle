@@ -108,6 +108,8 @@ android {
 }
 
 dependencies {
+    // react-native-image-picker: backported Photo Picker for Android < 11 (minSdk is 24).
+    implementation("androidx.activity:activity:1.9.+")
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 
