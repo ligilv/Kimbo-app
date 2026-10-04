@@ -1,10 +1,13 @@
 import { useNavigation } from '@react-navigation/native';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomSheet } from '@/components/BottomSheet';
 import { Text } from '@/components/Text';
+import { loadDemoAccount } from '@/features/demo/demoAccount';
+import { useKimboSheet } from '@/features/kimbo/KimboSheetProvider';
+import { toLocalDateKey } from '@/features/meals/dates';
 import { replayGuide } from '@/features/guide/AppGuide';
 import { getWelcomePlan } from '@/features/home/nudge';
 import { Composer } from '@/features/onboarding/components/Composer';
@@ -65,10 +68,31 @@ const showBuildInfo = (onReplayGuide: () => void) =>
       : undefined,
   );
 
+const DEMO_TAPS = 5;
+const TAP_GAP_MS = 600;
+type Timer = ReturnType<typeof setTimeout>;
+
+const confirmDemo = (onLoaded: () => void) =>
+  Alert.alert(
+    'Open the demo account?',
+    'This replaces everything on this phone with Ligil’s profile and a month of meals, so you can see streaks and progress.',
+    [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Open demo',
+        onPress: () => {
+          loadDemoAccount();
+          onLoaded();
+        },
+      },
+    ],
+  );
+
 const n = (value: number) => value.toLocaleString('en-IN');
 
 export function ProfileScreen() {
   const navigation = useNavigation();
+  const { setSelectedDate } = useKimboSheet();
   const [answers, update] = useAnswers();
   // The question being edited, plus answers given but not saved yet. Changing the
   // goal or weight can make the target weight point the wrong way; then the target
@@ -79,6 +103,32 @@ export function ProfileScreen() {
   } | null>(null);
   const [saved, setSaved] = useState<PlanChange | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // One tap: build details. Five quick taps (also in release builds): load the
+  // reviewer demo account.
+  const taps = useRef({ count: 0, timer: undefined as Timer | undefined });
+  useEffect(() => () => clearTimeout(taps.current.timer), []);
+  const onVersionTap = () => {
+    const t = taps.current;
+    clearTimeout(t.timer);
+    t.count += 1;
+    if (t.count >= DEMO_TAPS) {
+      t.count = 0;
+      confirmDemo(() => {
+        setSelectedDate(toLocalDateKey(new Date()));
+        navigation.navigate('MainTabs', { screen: 'Home' });
+      });
+      return;
+    }
+    t.timer = setTimeout(() => {
+      if (t.count === 1)
+        showBuildInfo(() => {
+          replayGuide();
+          navigation.navigate('MainTabs', { screen: 'Home' }); // the guide lives on Home
+        });
+      t.count = 0;
+    }, TAP_GAP_MS);
+  };
 
   if (!isComplete(answers)) return null; // only reachable after onboarding
   const targets = targetsFor(answers);
@@ -176,12 +226,7 @@ export function ProfileScreen() {
           Delete my data
         </Text>
         <Text
-          onPress={() =>
-            showBuildInfo(() => {
-              replayGuide();
-              navigation.navigate('MainTabs', { screen: 'Home' }); // the guide lives on Home
-            })
-          }
+          onPress={onVersionTap}
           accessibilityRole="button"
           accessibilityHint="Shows build details"
           suppressHighlighting

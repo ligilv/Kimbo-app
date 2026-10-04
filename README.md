@@ -68,6 +68,10 @@ src/
 ../server/          NestJS API (parse, sync), Prisma schema
 ```
 
+## For reviewers: demo account
+
+On Profile, tap the version number (**Kimbo v1.0.0**) five times quickly and confirm. The app swaps in Ligil's profile and a month of meals ending today: a 23-day streak with one rest day 🌙, water history, and enough data for Progress and Kimbo's take. It works in release builds and replaces whatever was on the phone. The data is generated on the phone each time, so it always ends "today".
+
 ## Run locally
 
 Requires Node ≥ 22.11 and a working [React Native environment](https://reactnative.dev/docs/set-up-your-environment).
