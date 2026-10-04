@@ -12,7 +12,10 @@ import {
 } from '@/features/meals/dates';
 import { SLOT_LABEL } from '@/features/meals/format';
 import { type MealSlot, MEAL_SLOTS } from '@/features/meals/types';
-import { requestCamera } from '@/features/permissions/mediaPermissions';
+import {
+  requestCamera,
+  requestVoice,
+} from '@/features/permissions/mediaPermissions';
 import { colors, fonts, radius, spacing } from '@/theme';
 
 export type LogMode = 'photo' | 'voice' | 'text';
@@ -23,32 +26,26 @@ type Option = {
   icon: LucideIcon;
   title: string;
   body: string;
-  ready: boolean;
 };
 
-// Voice arrives in Phase 5C. Until then it shows as "Coming soon", never as a
-// button that does nothing.
 const OPTIONS: Option[] = [
   {
     mode: 'photo',
     icon: Camera,
     title: 'Snap your plate',
     body: 'Take or pick a photo',
-    ready: true,
   },
   {
     mode: 'voice',
     icon: Mic,
     title: 'Say it',
     body: 'Tell Kimbo what you ate',
-    ready: false,
   },
   {
     mode: 'text',
     icon: Keyboard,
     title: 'Type it',
     body: 'e.g. 2 chapatis and dal',
-    ready: true,
   },
 ];
 
@@ -72,11 +69,25 @@ export function KimboSheet({
 }: Props) {
   const [slot, setSlot] = useState<MealSlot>(initialSlot ?? defaultSlotFor());
   const [cameraOff, setCameraOff] = useState(false);
+  const [voiceProblem, setVoiceProblem] = useState<
+    'unavailable' | 'denied' | null
+  >(null);
 
+  // Camera and microphone are asked for here, at the moment they're needed.
   const choose = async (mode: LogMode) => {
-    if (mode !== 'photo') return onChoose({ date, slot, mode });
-    if (await requestCamera()) onChoose({ date, slot, mode, source: 'camera' });
-    else setCameraOff(true);
+    if (mode === 'photo') {
+      if (await requestCamera())
+        onChoose({ date, slot, mode, source: 'camera' });
+      else setCameraOff(true);
+      return;
+    }
+    if (mode === 'voice') {
+      const access = await requestVoice();
+      if (access === 'ok') onChoose({ date, slot, mode });
+      else setVoiceProblem(access);
+      return;
+    }
+    onChoose({ date, slot, mode });
   };
 
   return (
@@ -113,15 +124,10 @@ export function KimboSheet({
           <View key={option.mode} style={styles.optionWrap}>
             <Pressable
               onPress={() => choose(option.mode)}
-              disabled={!option.ready}
               accessibilityRole="button"
-              accessibilityState={{ disabled: !option.ready }}
-              accessibilityLabel={`${option.title}${
-                option.ready ? '' : ', coming soon'
-              }`}
+              accessibilityLabel={option.title}
               style={({ pressed }) => [
                 styles.option,
-                !option.ready && styles.optionSoon,
                 pressed && styles.pressed,
               ]}
             >
@@ -130,11 +136,6 @@ export function KimboSheet({
                 <Text style={styles.optionTitle}>{option.title}</Text>
                 <Text style={styles.optionBody}>{option.body}</Text>
               </View>
-              {!option.ready && (
-                <View style={styles.soonTag}>
-                  <Text style={styles.soonText}>Coming soon</Text>
-                </View>
-              )}
             </Pressable>
             {option.mode === 'photo' && cameraOff && (
               <View style={styles.cameraOff}>
@@ -155,6 +156,33 @@ export function KimboSheet({
                     style={styles.linkButton}
                   >
                     <Text style={styles.linkText}>Pick from gallery</Text>
+                  </Pressable>
+                </View>
+              </View>
+            )}
+            {option.mode === 'voice' && voiceProblem && (
+              <View style={styles.cameraOff}>
+                <Text style={styles.cameraOffText}>
+                  {voiceProblem === 'denied'
+                    ? 'Microphone access is off.'
+                    : "Voice isn't available on this phone."}
+                </Text>
+                <View style={styles.cameraOffActions}>
+                  {voiceProblem === 'denied' && (
+                    <Pressable
+                      onPress={() => Linking.openSettings()}
+                      accessibilityRole="button"
+                      style={styles.linkButton}
+                    >
+                      <Text style={styles.linkText}>Allow in Settings</Text>
+                    </Pressable>
+                  )}
+                  <Pressable
+                    onPress={() => onChoose({ date, slot, mode: 'text' })}
+                    accessibilityRole="button"
+                    style={styles.linkButton}
+                  >
+                    <Text style={styles.linkText}>Type it instead</Text>
                   </Pressable>
                 </View>
               </View>
@@ -196,17 +224,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     backgroundColor: colors.surface,
   },
-  optionSoon: { opacity: 0.55 },
   optionText: { flex: 1, gap: 2 },
   optionTitle: { fontSize: 17, fontFamily: fonts.bold },
   optionBody: { fontSize: 14, opacity: 0.7 },
-  soonTag: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(31, 77, 58, 0.1)',
-  },
-  soonText: { fontSize: 12, fontFamily: fonts.semiBold, color: colors.primary },
   optionWrap: { gap: spacing.xs },
   cameraOff: { paddingHorizontal: spacing.lg, gap: 2 },
   cameraOffText: { fontSize: 14, opacity: 0.75 },

@@ -1,3 +1,7 @@
+import {
+  isAvailable as speechAvailable,
+  requestPermissions as requestSpeechPermissions,
+} from '@dbkable/react-native-speech-to-text';
 import { Platform } from 'react-native';
 import {
   PERMISSIONS,
@@ -19,4 +23,17 @@ const isGranted = (status: PermissionStatus) =>
 // this just returns that answer. True if allowed.
 export async function requestCamera(): Promise<boolean> {
   return isGranted(await request(CAMERA));
+}
+
+export type VoiceAccess = 'ok' | 'unavailable' | 'denied';
+
+// Asked at the moment "Say it" is tapped. Covers the microphone (and speech
+// recognition on iOS), plus whether the phone has a speech recogniser at all.
+export async function requestVoice(): Promise<VoiceAccess> {
+  try {
+    if (!(await speechAvailable())) return 'unavailable';
+    return (await requestSpeechPermissions()) ? 'ok' : 'denied';
+  } catch {
+    return 'unavailable';
+  }
 }

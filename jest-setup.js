@@ -20,3 +20,17 @@ jest.mock('react-native-nitro-modules', () => ({
 jest.mock('react-native-permissions', () =>
   require('react-native-permissions/mock'),
 );
+
+// Native speech recognition doesn't exist in Jest.
+jest.mock('@dbkable/react-native-speech-to-text', () => {
+  const subscription = { remove: () => {} };
+  return {
+    start: jest.fn(() => Promise.resolve()),
+    stop: jest.fn(() => Promise.resolve()),
+    isAvailable: jest.fn(() => Promise.resolve(true)),
+    requestPermissions: jest.fn(() => Promise.resolve(true)),
+    addSpeechResultListener: jest.fn(() => subscription),
+    addSpeechErrorListener: jest.fn(() => subscription),
+    addSpeechEndListener: jest.fn(() => subscription),
+  };
+});

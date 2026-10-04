@@ -2,7 +2,7 @@ import {
   type StaticScreenProps,
   useNavigation,
 } from '@react-navigation/native';
-import { Camera, ImageIcon, X } from 'lucide-react-native';
+import { Camera, ImageIcon, Mic, Square, X } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
   Image,
@@ -27,6 +27,7 @@ import {
   takePhoto,
 } from '@/features/logMeal/photo';
 import { useMealChat } from '@/features/logMeal/useMealChat';
+import { useSpeech } from '@/features/logMeal/useSpeech';
 import {
   defaultSlotFor,
   formatDayLabel,
@@ -34,13 +35,16 @@ import {
 } from '@/features/meals/dates';
 import { SLOT_LABEL } from '@/features/meals/format';
 import { type MealSlot, MEAL_SLOTS } from '@/features/meals/types';
-import { requestCamera } from '@/features/permissions/mediaPermissions';
+import {
+  requestCamera,
+  requestVoice,
+} from '@/features/permissions/mediaPermissions';
 import { colors, fonts, radius, spacing } from '@/theme';
 
 type Props = StaticScreenProps<{
   date: string;
   slot?: MealSlot;
-  mode?: 'text' | 'photo' | 'voice'; // voice arrives in Phase 5C
+  mode?: 'text' | 'photo' | 'voice';
   source?: 'camera' | 'gallery'; // for photo mode
 }>;
 
@@ -90,17 +94,55 @@ export function LogMealScreen({ route }: Props) {
   };
   const openGallery = async () => handlePhoto(await pickPhoto());
 
-  // Photo mode opens the camera (or gallery) straight away, once. The ref holds
-  // the latest opener so the effect itself only depends on the mode.
-  const isPhotoMode = route.params.mode === 'photo';
-  const openOnStart = useRef(openCamera);
-  openOnStart.current =
-    route.params.source === 'gallery' ? openGallery : openCamera;
+  // Voice: the words go into the text box, live while speaking. Never sent
+  // automatically, so food names like puttu or appam can be fixed first.
+  const speech = useSpeech({
+    onText: setDraft,
+    onNothingHeard: () =>
+      chat.say(
+        "I didn't catch that. Tap the mic to try again, or type what you had.",
+      ),
+    onError: error =>
+      chat.say(
+        error !== 'start-failed' && error.code === 'NETWORK_ERROR'
+          ? 'Voice needs an internet connection right now. Type what you had instead.'
+          : "Voice isn't working right now. Type what you had instead.",
+      ),
+  });
+
+  const toggleListening = async () => {
+    if (speech.listening) return speech.stopListening();
+    // Asked again in case it was turned off since the sheet (no popup if already allowed).
+    const access = await requestVoice();
+    if (access === 'ok') {
+      setDraft('');
+      speech.startListening();
+    } else {
+      chat.say(
+        access === 'denied'
+          ? 'Microphone access is off. Allow it in Settings, or type what you had.'
+          : "Voice isn't available on this phone. Type what you had instead.",
+      );
+    }
+  };
+
+  // Photo mode opens the camera (or gallery) and voice mode starts listening
+  // straight away, once. The ref holds the latest opener so the effect itself
+  // only depends on the mode.
+  const mode = route.params.mode;
+  const isPhotoMode = mode === 'photo';
+  const isVoiceMode = mode === 'voice';
+  const openOnStart = useRef<() => void>(openCamera);
+  openOnStart.current = isVoiceMode
+    ? toggleListening
+    : route.params.source === 'gallery'
+    ? openGallery
+    : openCamera;
   useEffect(() => {
-    if (!isPhotoMode) return;
+    if (mode !== 'photo' && mode !== 'voice') return;
     const timer = setTimeout(() => openOnStart.current(), 350); // let the screen slide in first
     return () => clearTimeout(timer);
-  }, [isPhotoMode]);
+  }, [mode]);
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
@@ -240,6 +282,32 @@ export function LogMealScreen({ route }: Props) {
               </Pressable>
             </View>
           )}
+          {isVoiceMode && (
+            <Pressable
+              onPress={toggleListening}
+              disabled={chat.thinking}
+              accessibilityRole="button"
+              accessibilityLabel={
+                speech.listening ? 'Stop listening' : 'Start speaking'
+              }
+              style={[styles.micButton, speech.listening && styles.micButtonOn]}
+            >
+              {speech.listening ? (
+                <Square
+                  size={18}
+                  color={colors.background}
+                  fill={colors.background}
+                />
+              ) : (
+                <Mic size={20} color={colors.primary} />
+              )}
+              <Text
+                style={[styles.micText, speech.listening && styles.micTextOn]}
+              >
+                {speech.listening ? 'Listening… tap to stop' : 'Tap to speak'}
+              </Text>
+            </Pressable>
+          )}
           <ChatInput
             value={draft}
             onChangeText={setDraft}
@@ -309,6 +377,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   photoActions: { flexDirection: 'row', gap: spacing.sm },
+  micButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    minHeight: 48,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(242, 163, 58, 0.2)',
+  },
+  micButtonOn: { backgroundColor: colors.primary },
+  micText: { fontSize: 16, fontFamily: fonts.semiBold, color: colors.primary },
+  micTextOn: { color: colors.background },
   photoAction: {
     flexDirection: 'row',
     alignItems: 'center',
