@@ -132,6 +132,23 @@ function scheduleRetry(send: Send) {
   }, RETRY_MS);
 }
 
+// Reset: asks the server to delete this phone's profile and meals. True when
+// they're gone (or sync is off), false when the server couldn't be reached.
+// ponytail: a sync already in flight can land after this and re-create the
+// row; rare, and the new device id after reset never reads it.
+export async function deleteServerData(
+  send: Send = httpSend,
+): Promise<boolean> {
+  if (!SYNC_ENABLED) return true;
+  clearTimeout(retryTimer);
+  retryTimer = undefined;
+  try {
+    return (await send('/me', { method: 'DELETE' })).ok;
+  } catch {
+    return false;
+  }
+}
+
 const changed = (key: OutboxKey) => {
   enqueue(key);
   flush();

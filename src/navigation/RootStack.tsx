@@ -46,13 +46,13 @@ const MainTabs = createBottomTabNavigator({
     Profile: {
       screen: ProfileScreen,
       options: {
-        headerShown: true,
-        tabBarIcon: ({ color, size }) => <UserRound color={color} size={size} />,
+        tabBarIcon: ({ color, size }) => (
+          <UserRound color={color} size={size} />
+        ),
       },
     },
   },
 });
-
 
 const RootStack = createNativeStackNavigator({
   screens: {

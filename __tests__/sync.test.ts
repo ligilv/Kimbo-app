@@ -6,7 +6,7 @@ import {
 } from '@/features/meals/mealStore';
 import type { MealLog } from '@/features/meals/types';
 import { enqueue, readOutbox } from '@/features/sync/outbox';
-import { flush } from '@/features/sync/sync';
+import { deleteServerData, flush } from '@/features/sync/sync';
 import { storage } from '@/storage';
 
 const meal = (id: string): MealLog => ({
@@ -118,4 +118,15 @@ test('the meal store announces every write', () => {
   deleteLog('a');
   stop();
   expect(seen).toEqual(['a', 'a', 'a']);
+});
+
+test('reset deletes this device on the server and reports failures', async () => {
+  const send = jest.fn(ok);
+  expect(await deleteServerData(send)).toBe(true);
+  expect(send).toHaveBeenCalledWith('/me', { method: 'DELETE' });
+
+  expect(await deleteServerData(status(503))).toBe(false);
+  expect(
+    await deleteServerData(() => Promise.reject(new Error('offline'))),
+  ).toBe(false);
 });
