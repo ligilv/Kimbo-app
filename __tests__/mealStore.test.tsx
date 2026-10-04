@@ -111,14 +111,17 @@ test('useDayLogs re-renders when that day changes', async () => {
     seen.push(useDayLogs('2026-10-03').totals.kcal);
     return null;
   }
+  let tree!: ReactTestRenderer.ReactTestRenderer;
   await ReactTestRenderer.act(() => {
-    ReactTestRenderer.create(<Probe />);
+    tree = ReactTestRenderer.create(<Probe />);
   });
   await ReactTestRenderer.act(() => {
     addLog(log('a', '2026-10-03', [item('x', 240)]));
   });
   expect(seen.at(0)).toBe(0);
   expect(seen.at(-1)).toBe(240);
+  // Unmount so later tests' storage resets don't update this component.
+  await ReactTestRenderer.act(() => tree.unmount());
 });
 
 test('scaling an item keeps nutrients in proportion', () => {

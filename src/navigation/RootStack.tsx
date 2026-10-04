@@ -1,17 +1,58 @@
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import {
   createStaticNavigation,
   type StaticParamList,
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { House, UserRound } from 'lucide-react-native';
+import { View } from 'react-native';
 import { useIsOnboarded } from '@/features/onboarding/useOnboarding';
 import { HomeScreen } from '@/screens/HomeScreen';
 import { LogMealScreen } from '@/screens/LogMealScreen';
 import { OnboardingScreen } from '@/screens/OnboardingScreen';
 import { ProfileScreen } from '@/screens/ProfileScreen';
 import { WelcomeScreen } from '@/screens/WelcomeScreen';
-import { navigationTheme } from '@/theme';
+import { colors, fonts, navigationTheme } from '@/theme';
+import { KimboTabButton } from './KimboTabButton';
+import { navigationRef } from './navigationRef';
 
 const useNeedsOnboarding = () => !useIsOnboarded();
+
+const NoScreen = () => <View />;
+
+const MainTabs = createBottomTabNavigator({
+  screenOptions: {
+    headerShown: false,
+    tabBarActiveTintColor: colors.primary,
+    tabBarInactiveTintColor: 'rgba(28, 43, 36, 0.5)',
+    tabBarLabelStyle: { fontFamily: fonts.semiBold, fontSize: 12 },
+    tabBarStyle: {
+      backgroundColor: colors.background,
+      borderTopColor: 'rgba(28, 43, 36, 0.12)',
+    },
+  },
+  screens: {
+    Home: {
+      screen: HomeScreen,
+      options: {
+        tabBarIcon: ({ color, size }) => <House color={color} size={size} />,
+      },
+    },
+    Kimbo: {
+      screen: NoScreen,
+      options: { tabBarButton: () => <KimboTabButton /> },
+      listeners: { tabPress: e => e.preventDefault() },
+    },
+    Profile: {
+      screen: ProfileScreen,
+      options: {
+        headerShown: true,
+        tabBarIcon: ({ color, size }) => <UserRound color={color} size={size} />,
+      },
+    },
+  },
+});
+
 
 const RootStack = createNativeStackNavigator({
   screens: {
@@ -25,9 +66,9 @@ const RootStack = createNativeStackNavigator({
       screen: OnboardingScreen,
       options: { headerShown: false },
     },
-    Home: {
+    MainTabs: {
       if: useIsOnboarded,
-      screen: HomeScreen,
+      screen: MainTabs,
       options: { headerShown: false },
     },
     LogMeal: {
@@ -35,18 +76,13 @@ const RootStack = createNativeStackNavigator({
       screen: LogMealScreen,
       options: { headerShown: false, presentation: 'fullScreenModal' },
     },
-    Profile: {
-      if: useIsOnboarded,
-      screen: ProfileScreen,
-      options: { title: 'Profile' },
-    },
   },
 });
 
 const StaticNavigation = createStaticNavigation(RootStack);
 
 export function Navigation() {
-  return <StaticNavigation theme={navigationTheme} />;
+  return <StaticNavigation ref={navigationRef} theme={navigationTheme} />;
 }
 
 type RootStackParamList = StaticParamList<typeof RootStack>;

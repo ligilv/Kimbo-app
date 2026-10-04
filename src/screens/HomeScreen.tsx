@@ -1,5 +1,4 @@
 import { useNavigation } from '@react-navigation/native';
-import { UserRound } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import {
@@ -8,10 +7,7 @@ import {
   useCompetingGestures,
   useFlingGesture,
 } from 'react-native-gesture-handler';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '@/components/Text';
 import { CalorieRing, ringLabel } from '@/features/home/components/CalorieRing';
 import { EditItemSheet } from '@/features/home/components/EditItemSheet';
@@ -19,6 +15,7 @@ import { MacroBars } from '@/features/home/components/MacroBars';
 import { MealsList } from '@/features/home/components/MealsList';
 import { TargetExplanationSheet } from '@/features/home/components/TargetExplanationSheet';
 import { WeekStrip } from '@/features/home/components/WeekStrip';
+import { useKimboSheet } from '@/features/kimbo/KimboSheetProvider';
 import {
   addDays,
   type DateKey,
@@ -45,10 +42,14 @@ const headerDate = (key: DateKey) => {
 
 export function HomeScreen() {
   const navigation = useNavigation();
-  const insets = useSafeAreaInsets();
   const [answers] = useAnswers();
   const today = toLocalDateKey(new Date());
-  const [selected, setSelected] = useState(today);
+  // Shared with the Kimbo tab button, so logging goes to the day on screen.
+  const {
+    selectedDate: selected,
+    setSelectedDate: setSelected,
+    openKimboSheet,
+  } = useKimboSheet();
   const [explaining, setExplaining] = useState(false);
   const [editing, setEditing] = useState<{
     log: MealLog;
@@ -96,14 +97,6 @@ export function HomeScreen() {
             <Text style={styles.todayChipText}>Back to today</Text>
           </Pressable>
         )}
-        <Pressable
-          onPress={() => navigation.navigate('Profile')}
-          accessibilityRole="button"
-          accessibilityLabel="Profile"
-          style={styles.profileButton}
-        >
-          <UserRound size={22} color={colors.primary} />
-        </Pressable>
       </View>
 
       <View style={styles.weekStrip}>
@@ -123,7 +116,8 @@ export function HomeScreen() {
           <ScrollView
             contentContainerStyle={[
               styles.body,
-              { paddingBottom: 96 + insets.bottom },
+              // Clears the raised Kimbo button that overlaps the top of the tab bar.
+              { paddingBottom: spacing.xl * 2 },
             ]}
           >
             {targets && (
@@ -168,9 +162,7 @@ export function HomeScreen() {
 
             <MealsList
               logs={logs}
-              onAddToSlot={slot =>
-                navigation.navigate('LogMeal', { date: selected, slot })
-              }
+              onAddToSlot={openKimboSheet}
               onEditItem={(log, item) => setEditing({ log, item })}
             />
           </ScrollView>
@@ -185,7 +177,7 @@ export function HomeScreen() {
           targets={targets}
           onEditProfile={() => {
             setExplaining(false);
-            navigation.navigate('Profile');
+            navigation.navigate('MainTabs', { screen: 'Profile' });
           }}
         />
       )}
@@ -198,18 +190,6 @@ export function HomeScreen() {
           onClose={() => setEditing(null)}
         />
       )}
-
-      <View
-        style={[styles.footer, { paddingBottom: insets.bottom + spacing.md }]}
-      >
-        <Pressable
-          onPress={() => navigation.navigate('LogMeal', { date: selected })}
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.cta, pressed && styles.pressed]}
-        >
-          <Text style={styles.ctaText}>Log a meal</Text>
-        </Pressable>
-      </View>
     </SafeAreaView>
   );
 }
@@ -238,14 +218,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semiBold,
     color: colors.primary,
   },
-  profileButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   weekStrip: { paddingHorizontal: spacing.sm, paddingVertical: spacing.md },
   body: { paddingHorizontal: spacing.lg, gap: spacing.md },
   card: {
@@ -256,22 +228,5 @@ const styles = StyleSheet.create({
   },
   cardLabel: { fontSize: 13, fontFamily: fonts.semiBold, opacity: 0.6 },
   muted: { fontSize: 15, fontFamily: fonts.regular, opacity: 0.7 },
-  footer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    backgroundColor: colors.background,
-  },
-  cta: {
-    backgroundColor: colors.accent,
-    borderRadius: radius.xl,
-    minHeight: 54,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ctaText: { fontSize: 17, fontFamily: fonts.bold, color: colors.text },
   pressed: { opacity: 0.8 },
 });

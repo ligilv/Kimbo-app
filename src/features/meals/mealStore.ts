@@ -49,6 +49,16 @@ export function getTotalsForRange(
   );
 }
 
+// Tells the sync module which meal changed, so it can send it to the server.
+// A listener instead of an import keeps the store free of network code.
+type MealWrittenListener = (id: string) => void;
+const writtenListeners = new Set<MealWrittenListener>();
+export function onMealWritten(listener: MealWrittenListener) {
+  writtenListeners.add(listener);
+  return () => writtenListeners.delete(listener);
+}
+const notifyWritten = (id: string) => writtenListeners.forEach(listener => listener(id));
+
 export const hasAnyLogs = () =>
   storage.getAllKeys().some(key => key.startsWith(PREFIX));
 
@@ -57,10 +67,24 @@ export function addLog(log: MealLog) {
   // Saving the same log twice (e.g. a double-tapped Save) keeps one copy.
   if (logs.some(existing => existing.id === log.id)) return;
   saveDay(log.date, [...logs, log]);
+  notifyWritten(log.id);
 }
 
 // ponytail: finds a log by scanning day keys (one per day with meals). Fine for
 // years of use; keep an id -> date index if it ever shows up in profiling.
+export function findLog(id: string): MealLog | undefined {
+  const date = findDate(id);
+  return date ? getLogsForDate(date).find(log => log.id === id) : undefined;
+}
+
+// Every saved meal's id, oldest day first.
+export const allLogIds = () =>
+  storage
+    .getAllKeys()
+    .filter(key => key.startsWith(PREFIX))
+    .sort()
+    .flatMap(key => getLogsForDate(key.slice(PREFIX.length)).map(log => log.id));
+
 function findDate(id: string): DateKey | undefined {
   for (const key of storage.getAllKeys()) {
     if (!key.startsWith(PREFIX)) continue;
@@ -97,15 +121,17 @@ export function updateLog(
     );
     saveDay(updated.date, [...getLogsForDate(updated.date), updated]);
   }
+  notifyWritten(id);
 }
 
 export function deleteLog(id: string) {
   const date = findDate(id);
-  if (date)
-    saveDay(
-      date,
-      getLogsForDate(date).filter(log => log.id !== id),
-    );
+  if (!date) return;
+  saveDay(
+    date,
+    getLogsForDate(date).filter(log => log.id !== id),
+  );
+  notifyWritten(id);
 }
 
 // Removing the last item of a meal removes the meal too.

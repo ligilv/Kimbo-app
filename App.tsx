@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { StatusBar } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { KimboSheetProvider } from '@/features/kimbo/KimboSheetProvider';
 import { Navigation } from '@/navigation/RootStack';
 import { seedMockMeals } from '@/mocks/seedMockMeals';
 import { SplashScreen } from '@/screens/SplashScreen';
@@ -16,7 +17,9 @@ function App() {
     <GestureHandlerRootView>
       <SafeAreaProvider>
         <StatusBar barStyle="dark-content" />
-        <Navigation />
+        <KimboSheetProvider>
+          <Navigation />
+        </KimboSheetProvider>
         {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
       </SafeAreaProvider>
     </GestureHandlerRootView>
