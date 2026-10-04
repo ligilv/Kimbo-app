@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
   forDay: { fontSize: 15, fontFamily: fonts.semiBold, color: colors.primary },
   slots: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   slot: {
-    minHeight: 40,
+    minHeight: 44,
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
     borderRadius: radius.pill,
@@ -230,7 +230,11 @@ const styles = StyleSheet.create({
   optionWrap: { gap: spacing.xs },
   cameraOff: { paddingHorizontal: spacing.lg, gap: 2 },
   cameraOffText: { fontSize: 14, opacity: 0.75 },
-  cameraOffActions: { flexDirection: 'row', gap: spacing.lg },
+  cameraOffActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    columnGap: spacing.lg,
+  },
   linkButton: { minHeight: 44, justifyContent: 'center' },
   linkText: {
     fontSize: 15,

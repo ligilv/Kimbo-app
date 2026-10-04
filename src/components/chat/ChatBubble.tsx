@@ -19,12 +19,18 @@ export function KimboBubble({ text }: { text: string }) {
 
 type UserBubbleProps = {
   text: string;
-  editing: boolean;
-  onPress: () => void;
+  editing?: boolean;
+  onPress?: () => void; // leave out for a bubble that can't be changed
 };
 
-// Tapping your own answer lets you change it.
 export function UserBubble({ text, editing, onPress }: UserBubbleProps) {
+  if (!onPress) {
+    return (
+      <View style={[styles.bubble, styles.userBubble]}>
+        <Text style={styles.userText}>{text}</Text>
+      </View>
+    );
+  }
   return (
     <Pressable
       onPress={onPress}

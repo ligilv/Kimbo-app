@@ -1,5 +1,12 @@
 import { type ReactNode, useCallback, useEffect } from 'react';
-import { Dimensions, Modal, Pressable, StyleSheet, View } from 'react-native';
+import {
+  Dimensions,
+  KeyboardAvoidingView,
+  Modal,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
 import {
   GestureDetector,
   GestureHandlerRootView,
@@ -26,13 +33,13 @@ type Props = {
   children: ReactNode;
 };
 
-
 export function BottomSheet({ visible, onClose, children }: Props) {
   const insets = useSafeAreaInsets();
   const offset = useSharedValue(HIDDEN);
 
   useEffect(() => {
-    if (visible) offset.value = withTiming(0, { duration: 280 });
+    // Reset when hidden from outside, so the next open slides in again.
+    offset.value = visible ? withTiming(0, { duration: 280 }) : HIDDEN;
   }, [visible, offset]);
 
   // Animate out first, then tell the parent, so the sheet doesn't just vanish.
@@ -75,28 +82,31 @@ export function BottomSheet({ visible, onClose, children }: Props) {
     >
       {/* Gestures inside a Modal need their own root view. */}
       <GestureHandlerRootView style={styles.root}>
-        <Animated.View style={[styles.backdrop, backdropStyle]}>
-          <Pressable
-            style={StyleSheet.absoluteFill}
-            onPress={close}
-            accessibilityRole="button"
-            accessibilityLabel="Close"
-          />
-        </Animated.View>
-        <Animated.View
-          style={[
-            styles.sheet,
-            { paddingBottom: insets.bottom + spacing.lg },
-            sheetStyle,
-          ]}
-        >
-          <GestureDetector gesture={drag}>
-            <View style={styles.handleArea}>
-              <View style={styles.handle} />
-            </View>
-          </GestureDetector>
-          {children}
-        </Animated.View>
+        {/* A Modal is its own window: the app's keyboard resizing doesn't reach it. */}
+        <KeyboardAvoidingView behavior="padding" style={styles.root}>
+          <Animated.View style={[styles.backdrop, backdropStyle]}>
+            <Pressable
+              style={StyleSheet.absoluteFill}
+              onPress={close}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+            />
+          </Animated.View>
+          <Animated.View
+            style={[
+              styles.sheet,
+              { paddingBottom: insets.bottom + spacing.lg },
+              sheetStyle,
+            ]}
+          >
+            <GestureDetector gesture={drag}>
+              <View style={styles.handleArea}>
+                <View style={styles.handle} />
+              </View>
+            </GestureDetector>
+            {children}
+          </Animated.View>
+        </KeyboardAvoidingView>
       </GestureHandlerRootView>
     </Modal>
   );

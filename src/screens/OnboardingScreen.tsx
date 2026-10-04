@@ -136,7 +136,7 @@ export function OnboardingScreen() {
                 <Pressable
                   onPress={() => setEditingId(null)}
                   accessibilityRole="button"
-                  hitSlop={8}
+                  hitSlop={12}
                 >
                   <Text style={styles.editingCancel}>Cancel</Text>
                 </Pressable>

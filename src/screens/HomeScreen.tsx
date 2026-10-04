@@ -202,10 +202,14 @@ export function HomeScreen() {
 
             {nudge && (
               <Pressable
-                onPress={nudge.slot ? () => openKimboSheet(nudge.slot) : undefined}
+                onPress={
+                  nudge.slot ? () => openKimboSheet(nudge.slot) : undefined
+                }
                 disabled={!nudge.slot}
                 accessibilityRole={nudge.slot ? 'button' : 'text'}
-                accessibilityHint={nudge.slot ? 'Opens meal logging' : undefined}
+                accessibilityHint={
+                  nudge.slot ? 'Opens meal logging' : undefined
+                }
                 style={({ pressed }) => [
                   styles.card,
                   styles.nudge,
@@ -268,7 +272,7 @@ const styles = StyleSheet.create({
   greeting: { fontSize: 24, fontFamily: fonts.extraBold },
   dateLabel: { fontSize: 15, opacity: 0.7, marginTop: 2 },
   todayChip: {
-    minHeight: 36,
+    minHeight: 44,
     justifyContent: 'center',
     paddingHorizontal: spacing.md,
     borderRadius: radius.pill,

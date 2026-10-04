@@ -30,7 +30,7 @@ function Bar({ label, eaten, target }: Macro) {
     >
       <View style={styles.labels}>
         <Text style={styles.label}>{label}</Text>
-        <Text style={styles.amount}>
+        <Text style={styles.amount} numberOfLines={1} adjustsFontSizeToFit>
           {Math.round(eaten)}
           <Text style={styles.target}> / {target} g</Text>
         </Text>

@@ -98,6 +98,8 @@ export function DeleteDataModal({ onClose }: { onClose: () => void }) {
             onPress={onClose}
             disabled={busy}
             accessibilityRole="button"
+            accessibilityElementsHidden={busy}
+            importantForAccessibility={busy ? 'no-hide-descendants' : 'auto'}
             style={({ pressed }) => [
               styles.button,
               busy && styles.hidden,

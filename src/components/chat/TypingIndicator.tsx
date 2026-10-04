@@ -34,7 +34,12 @@ function Dot({ delay }: { delay: number }) {
 // Kimbo's avatar spins (the loader animation) while three dots bounce.
 export function TypingIndicator() {
   return (
-    <View style={styles.row} accessibilityLabel="Kimbo is typing">
+    <View
+      style={styles.row}
+      accessible
+      accessibilityLabel="Kimbo is typing"
+      accessibilityLiveRegion="polite"
+    >
       <View style={styles.avatar}>
         <LottieView
           source={require('@/assets/lottie/kimbo_loader_light_bg.json')}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomSheet } from '@/components/BottomSheet';
@@ -16,6 +16,10 @@ import {
 import type { Answers } from '@/features/onboarding/types';
 import { formatWeight } from '@/features/onboarding/units';
 import { useAnswers } from '@/features/onboarding/useOnboarding';
+import { API_URL } from '@/config';
+import { getDeviceId } from '@/features/sync/deviceId';
+import { readOutbox } from '@/features/sync/outbox';
+import { version } from '../../package.json';
 import { DeleteDataModal } from '@/features/profile/DeleteDataModal';
 import {
   type PlanChange,
@@ -40,6 +44,18 @@ const GROUPS = [
   { title: 'Your goal', ids: ['goal', 'weight', 'target'] },
   { title: 'Lifestyle', ids: ['activity', 'diet'] },
 ];
+
+// Details for testing on a phone or reporting a bug.
+const showBuildInfo = () =>
+  Alert.alert(
+    'About this build',
+    [
+      `Version ${version} (${__DEV__ ? 'debug' : 'release'})`,
+      `Server: ${API_URL}`,
+      `Changes waiting to sync: ${readOutbox().length}`,
+      `Device ID: ${getDeviceId().slice(0, 8)}`,
+    ].join('\n'),
+  );
 
 const n = (value: number) => value.toLocaleString('en-IN');
 
@@ -150,6 +166,15 @@ export function ProfileScreen() {
         >
           Delete my data
         </Text>
+        <Text
+          onPress={showBuildInfo}
+          accessibilityRole="button"
+          accessibilityHint="Shows build details"
+          suppressHighlighting
+          style={styles.version}
+        >
+          Kimbo v{version}
+        </Text>
       </ScrollView>
 
       {editing && (
@@ -221,6 +246,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: fonts.semiBold,
     color: colors.alert,
+  },
+  version: {
+    alignSelf: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    fontSize: 13,
+    opacity: 0.5,
   },
   sheet: { gap: spacing.lg },
   sheetTitle: { fontSize: 18, fontFamily: fonts.bold },

@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
     padding: 3,
   },
   toggleItem: {
-    minHeight: 40,
+    minHeight: 44,
     minWidth: 56,
     paddingHorizontal: 16,
     alignItems: 'center',

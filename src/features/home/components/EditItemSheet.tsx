@@ -65,7 +65,7 @@ export function EditItemSheet({ log, item, onClose }: Props) {
             onPress={() => setQuantity(q => Math.max(STEP, q - STEP))}
             disabled={quantity <= STEP}
             accessibilityRole="button"
-            accessibilityLabel="Less"
+            accessibilityLabel={`Less ${item.name}`}
             style={[styles.stepButton, quantity <= STEP && styles.disabled]}
           >
             <Minus size={22} color={colors.primary} />
@@ -76,7 +76,7 @@ export function EditItemSheet({ log, item, onClose }: Props) {
           <Pressable
             onPress={() => setQuantity(q => Math.min(MAX, q + STEP))}
             accessibilityRole="button"
-            accessibilityLabel="More"
+            accessibilityLabel={`More ${item.name}`}
             style={styles.stepButton}
           >
             <Plus size={22} color={colors.primary} />

@@ -114,7 +114,7 @@ export function WeekStrip({
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   arrow: {
-    width: 32,
+    width: 44,
     height: 48,
     alignItems: 'center',
     justifyContent: 'center',

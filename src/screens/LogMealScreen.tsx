@@ -59,6 +59,10 @@ export function LogMealScreen({ route }: Props) {
   const chat = useMealChat(date, initialSlot);
   const [draft, setDraft] = useState('');
   const scroll = useRef<ScrollViewInstance>(null);
+  // Going back after a save is delayed so the "Saved" bubble shows; cancel it
+  // if the user leaves first, or it would pop Home.
+  const backTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(backTimer.current), []);
 
   const latestCardId = [...chat.messages]
     .reverse()
@@ -191,13 +195,7 @@ export function LogMealScreen({ route }: Props) {
                   accessibilityLabel="Your meal photo"
                 />
               )}
-              {message.kind === 'user' && (
-                <UserBubble
-                  text={message.text}
-                  editing={false}
-                  onPress={() => {}}
-                />
-              )}
+              {message.kind === 'user' && <UserBubble text={message.text} />}
               {message.kind === 'error' && (
                 <View style={styles.errorBlock}>
                   <KimboBubble text={message.text} />
@@ -222,7 +220,10 @@ export function LogMealScreen({ route }: Props) {
                   onEdit={() => setDraft(chat.editCard(message.id))}
                   onSave={() => {
                     if (chat.saveCard(message.id)) {
-                      setTimeout(() => navigation.goBack(), BACK_TO_HOME_MS);
+                      backTimer.current = setTimeout(
+                        () => navigation.goBack(),
+                        BACK_TO_HOME_MS,
+                      );
                     }
                   }}
                 />
@@ -393,7 +394,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    minHeight: 40,
+    minHeight: 44,
     paddingHorizontal: spacing.lg,
     borderRadius: radius.pill,
     backgroundColor: 'rgba(242, 163, 58, 0.2)',
@@ -404,7 +405,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   slot: {
-    minHeight: 40,
+    minHeight: 44,
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
     borderRadius: radius.pill,

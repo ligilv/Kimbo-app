@@ -103,7 +103,12 @@ export function PlanUpdatedModal({
 
   return (
     <Modal transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
+      <Pressable
+        style={styles.backdrop}
+        onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel="Close"
+      >
         <Animated.View
           entering={ZoomIn.springify().damping(20).stiffness(220)}
           style={styles.card}

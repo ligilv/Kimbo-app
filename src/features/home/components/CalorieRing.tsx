@@ -68,9 +68,15 @@ export function CalorieRing({ eaten, target, isToday }: Props) {
         />
       </Svg>
       <View style={styles.centre} pointerEvents="none">
-        <Text style={styles.number}>{number}</Text>
-        <Text style={styles.caption}>{caption}</Text>
-        <Text style={styles.subtext}>of {kcal(target)} kcal</Text>
+        <Text style={styles.number} maxFontSizeMultiplier={1.3}>
+          {number}
+        </Text>
+        <Text style={styles.caption} maxFontSizeMultiplier={1.3}>
+          {caption}
+        </Text>
+        <Text style={styles.subtext} maxFontSizeMultiplier={1.3}>
+          of {kcal(target)} kcal
+        </Text>
       </View>
     </View>
   );
