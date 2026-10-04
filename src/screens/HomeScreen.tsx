@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import {
   Directions,
   GestureDetector,
@@ -15,6 +15,7 @@ import { MacroBars } from '@/features/home/components/MacroBars';
 import { MealsList } from '@/features/home/components/MealsList';
 import { TargetExplanationSheet } from '@/features/home/components/TargetExplanationSheet';
 import { WeekStrip } from '@/features/home/components/WeekStrip';
+import { getNudge } from '@/features/home/nudge';
 import { useKimboSheet } from '@/features/kimbo/KimboSheetProvider';
 import {
   addDays,
@@ -80,6 +81,13 @@ export function HomeScreen() {
   const swipe = useCompetingGestures(swipeNext, swipePrev);
 
   const isTodaySelected = selected === today;
+  const nudge =
+    profile && targets
+      ? getNudge(totals, targets, new Date(), {
+          isToday: isTodaySelected,
+          diet: profile.diet,
+        })
+      : null;
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
@@ -156,9 +164,26 @@ export function HomeScreen() {
               </View>
             )}
 
-            <View style={styles.card}>
-              <Text style={styles.cardLabel}>Kimbo nudge · Phase 6</Text>
-            </View>
+            {nudge && (
+              <Pressable
+                onPress={nudge.slot ? () => openKimboSheet(nudge.slot) : undefined}
+                disabled={!nudge.slot}
+                accessibilityRole={nudge.slot ? 'button' : 'text'}
+                accessibilityHint={nudge.slot ? 'Opens meal logging' : undefined}
+                style={({ pressed }) => [
+                  styles.card,
+                  styles.nudge,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Image
+                  source={require('@/assets/images/kimbo-avatar.png')}
+                  style={styles.nudgeAvatar}
+                  accessibilityIgnoresInvertColors
+                />
+                <Text style={styles.nudgeText}>{nudge.text}</Text>
+              </Pressable>
+            )}
 
             <MealsList
               logs={logs}
@@ -226,7 +251,9 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.lg,
   },
-  cardLabel: { fontSize: 13, fontFamily: fonts.semiBold, opacity: 0.6 },
+  nudge: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  nudgeAvatar: { width: 40, height: 40, borderRadius: 20 },
+  nudgeText: { flex: 1, fontSize: 15, fontFamily: fonts.semiBold },
   muted: { fontSize: 15, fontFamily: fonts.regular, opacity: 0.7 },
   pressed: { opacity: 0.8 },
 });
