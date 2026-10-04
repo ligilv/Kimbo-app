@@ -1,21 +1,6 @@
-import { Camera, Mic } from 'lucide-react-native';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
-import { openSettings } from 'react-native-permissions';
-import { IconBadge } from '@/components/IconBadge';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { Text } from '@/components/Text';
-import {
-  isBlocked,
-  isGranted,
-  type MediaStatuses,
-  useMediaPermissions,
-} from '@/features/permissions/mediaPermissions';
 import { colors, fonts } from '@/theme';
 import type { Step, StepInput } from '../script';
 import type { Answers } from '../types';
@@ -60,8 +45,6 @@ export function Composer({ step, answers, onSubmit, onFinish }: Props) {
           onSubmit={onSubmit}
         />
       );
-    case 'permissions':
-      return <PermissionsComposer onSubmit={onSubmit} />;
     case 'finish':
       return (
         <Pressable
@@ -73,90 +56,6 @@ export function Composer({ step, answers, onSubmit, onFinish }: Props) {
         </Pressable>
       );
   }
-}
-
-const toAccess = (s: MediaStatuses) => ({
-  camera: isGranted(s.camera),
-  microphone: isGranted(s.microphone),
-});
-
-// Never blocks onboarding: whatever the user picks, the chat moves on and Kimbo
-// explains how to log meals without the camera or mic.
-function PermissionsComposer({
-  onSubmit,
-}: {
-  onSubmit: (patch: Answers) => void;
-}) {
-  const { statuses, request } = useMediaPermissions();
-  const [asking, setAsking] = useState(false);
-  // Android's check never reports "blocked", only a request does. Remember it so
-  // the button switches to Settings instead of silently doing nothing.
-  const [refused, setRefused] = useState(false);
-
-  if (!statuses) return <ActivityIndicator color={colors.primary} />;
-
-  const allGranted =
-    isGranted(statuses.camera) && isGranted(statuses.microphone);
-  // The system popup won't appear again, so the only way to allow is Settings.
-  const blocked =
-    refused || isBlocked(statuses.camera) || isBlocked(statuses.microphone);
-
-  const allow = async () => {
-    setAsking(true);
-    try {
-      const result = await request();
-      const access = toAccess(result);
-      const nowBlocked =
-        (!access.camera && isBlocked(result.camera)) ||
-        (!access.microphone && isBlocked(result.microphone));
-      if (nowBlocked) setRefused(true);
-      else onSubmit({ mediaAccess: access });
-    } finally {
-      setAsking(false);
-    }
-  };
-
-  const primary = allGranted
-    ? {
-        label: 'Continue',
-        onPress: () => onSubmit({ mediaAccess: toAccess(statuses) }),
-      }
-    : blocked
-    ? { label: 'Open Settings', onPress: () => openSettings('application') }
-    : { label: 'Allow camera & mic', onPress: allow };
-
-  return (
-    <View style={styles.stack}>
-      <View style={styles.permissionRow}>
-        <IconBadge icon={Camera} />
-        <Text style={styles.permissionText}>Snap a photo of your plate</Text>
-      </View>
-      <View style={styles.permissionRow}>
-        <IconBadge icon={Mic} />
-        <Text style={styles.permissionText}>Say what you ate</Text>
-      </View>
-      {blocked && !allGranted && (
-        <Hint text="Your phone won't ask again. Turn on Camera and Microphone for Kimbo in Settings, then come back here." />
-      )}
-      <Pressable
-        onPress={primary.onPress}
-        disabled={asking}
-        accessibilityRole="button"
-        style={({ pressed }) => [styles.cta, pressed && styles.pressed]}
-      >
-        <Text style={styles.ctaText}>{primary.label}</Text>
-      </Pressable>
-      {!allGranted && (
-        <Pressable
-          onPress={() => onSubmit({ mediaAccess: toAccess(statuses) })}
-          accessibilityRole="button"
-          style={styles.secondary}
-        >
-          <Text style={styles.secondaryText}>Not now, I'll type my meals</Text>
-        </Pressable>
-      )}
-    </View>
-  );
 }
 
 function SendButton({
@@ -654,18 +553,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   ctaText: { fontSize: 17, fontFamily: fonts.bold, color: colors.text },
-  permissionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 4,
-  },
-  permissionText: { fontSize: 16, fontFamily: fonts.semiBold },
-  secondary: { minHeight: 48, alignItems: 'center', justifyContent: 'center' },
-  secondaryText: {
-    fontSize: 16,
-    fontFamily: fonts.semiBold,
-    color: colors.primary,
-  },
   pressed: { opacity: 0.8 },
 });

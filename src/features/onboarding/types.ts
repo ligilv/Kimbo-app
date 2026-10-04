@@ -15,7 +15,6 @@ export type Profile = {
   targetWeightKg?: number; // only for lose / gain
   activity: Activity;
   diet: Diet;
-  mediaAccess?: { camera: boolean; microphone: boolean };
   heightUnit: 'cm' | 'ftin';
   weightUnit: 'kg' | 'lb';
 };

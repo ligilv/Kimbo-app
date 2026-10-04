@@ -14,7 +14,6 @@ export type StepInput =
   | { kind: 'age' }
   | { kind: 'height' }
   | { kind: 'weight'; field: 'weightKg' | 'targetWeightKg' }
-  | { kind: 'permissions' }
   | { kind: 'finish' };
 
 export type Step = {
@@ -78,26 +77,6 @@ const GOAL_REACTION: Record<Profile['goal'], string> = {
   gain: "Great, we'll make sure you eat enough to build.",
 };
 
-const mediaFollowUp = (a: Answers) => {
-  const access = a.mediaAccess;
-  if (!access || (access.camera && access.microphone)) return '';
-  if (!access.camera && !access.microphone) {
-    return "No problem, you can always type your meals instead. If you change your mind, turn on Camera and Microphone for Kimbo in your phone's Settings.\n\n";
-  }
-  const [on, off] = access.camera
-    ? ['camera', 'microphone']
-    : ['microphone', 'camera'];
-  return `Got it, ${on} is on. You can turn on the ${off} later in your phone's Settings.\n\n`;
-};
-
-const mediaReply = (a: Answers) => {
-  const { camera, microphone } = a.mediaAccess!;
-  if (camera && microphone) return 'Camera and mic on';
-  if (camera) return 'Camera on, mic off';
-  if (microphone) return 'Mic on, camera off';
-  return "Not now, I'll type";
-};
-
 const needsTarget = (a: Answers) => a.goal === 'lose' || a.goal === 'gain';
 
 const targetIsValid = (a: Answers) =>
@@ -138,7 +117,7 @@ const planMessage = (a: Answers) => {
         a.weightUnit ?? 'kg',
       )} in about ${t.weeksToTarget} weeks.`
     : '';
-  return `${mediaFollowUp(a)}Here's your plan, ${displayName(a)} 🎯\n\n${kcal(
+  return `Here's your plan, ${displayName(a)} 🎯\n\n${kcal(
     t.calories,
   )} kcal a day\nProtein ${t.proteinG} g · Carbs ${t.carbsG} g · Fat ${
     t.fatG
@@ -224,21 +203,10 @@ export const STEPS: Step[] = [
   {
     id: 'diet',
     topic: 'What you eat',
-    kimbo: () => 'Almost done! What do you usually eat?',
+    kimbo: () => 'Last one! What do you usually eat?',
     input: { kind: 'choice', field: 'diet', options: DIETS },
     isAnswered: a => a.diet !== undefined,
     reply: a => label(DIETS, a.diet),
-  },
-  {
-    id: 'media',
-    topic: 'Camera and mic',
-    kimbo: a =>
-      `Last thing, ${displayName(
-        a,
-      )}! The fastest way to log a meal is to snap your plate or just say what you ate, like "two rotis and dal".\n\nCan I use your camera and microphone for that?`,
-    input: { kind: 'permissions' },
-    isAnswered: a => a.mediaAccess !== undefined,
-    reply: mediaReply,
   },
   {
     id: 'plan',

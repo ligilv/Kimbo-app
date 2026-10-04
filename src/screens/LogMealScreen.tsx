@@ -90,15 +90,17 @@ export function LogMealScreen({ route }: Props) {
   };
   const openGallery = async () => handlePhoto(await pickPhoto());
 
+  // Photo mode opens the camera (or gallery) straight away, once. The ref holds
+  // the latest opener so the effect itself only depends on the mode.
   const isPhotoMode = route.params.mode === 'photo';
+  const openOnStart = useRef(openCamera);
+  openOnStart.current =
+    route.params.source === 'gallery' ? openGallery : openCamera;
   useEffect(() => {
     if (!isPhotoMode) return;
-    const timer = setTimeout(() => {
-      if (route.params.source === 'gallery') openGallery();
-      else openCamera();
-    }, 350);
+    const timer = setTimeout(() => openOnStart.current(), 350); // let the screen slide in first
     return () => clearTimeout(timer);
-  }, []);
+  }, [isPhotoMode]);
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>

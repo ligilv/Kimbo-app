@@ -39,7 +39,6 @@ function readProfile() {
   const json = storage.getString(ANSWERS_KEY);
   const answers = json ? (JSON.parse(json) as Answers) : {};
   if (!isComplete(answers)) return undefined;
-  // mediaAccess is a phone setting, not profile data, so it isn't sent.
   const {
     name,
     goal,

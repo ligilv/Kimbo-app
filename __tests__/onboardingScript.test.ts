@@ -20,7 +20,6 @@ const done: Answers = {
   targetWeightKg: 74,
   activity: 'moderate',
   diet: 'veg',
-  mediaAccess: { camera: true, microphone: true },
 };
 
 test('starts with the intro and stops at the first unanswered question', () => {
@@ -50,18 +49,10 @@ test('a finished profile ends on the plan with real numbers', () => {
 test('progress counts only the questions that apply', () => {
   expect(onboardingProgress({ name: 'Ligil', goal: 'lose' })).toMatchObject({
     done: 2,
-    total: 10, // includes the target weight and camera/mic questions
+    total: 9, // includes the target weight question
     next: { id: 'sex' },
   });
-  expect(onboardingProgress({ name: 'Ligil', goal: 'maintain' }).total).toBe(9);
-  expect(onboardingProgress({ name: 'Ligil' }).total).toBe(10); // goal not picked yet
+  expect(onboardingProgress({ name: 'Ligil', goal: 'maintain' }).total).toBe(8);
+  expect(onboardingProgress({ name: 'Ligil' }).total).toBe(9); // goal not picked yet
 });
 
-test('declining camera and mic is explained before the plan', () => {
-  const plan = STEPS.find(s => s.id === 'plan')!;
-  const none = { ...done, mediaAccess: { camera: false, microphone: false } };
-  expect(plan.kimbo(none)).toMatch(/^No problem, you can always type your meals/);
-  const cameraOnly = { ...done, mediaAccess: { camera: true, microphone: false } };
-  expect(plan.kimbo(cameraOnly)).toMatch(/^Got it, camera is on\. You can turn on the microphone later/);
-  expect(plan.kimbo(done)).toMatch(/^Here's your plan/);
-});
