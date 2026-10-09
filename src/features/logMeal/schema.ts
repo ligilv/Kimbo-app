@@ -10,6 +10,7 @@ export const parsedItemSchema = z.object({
   protein: z.number().nonnegative(),
   carbs: z.number().nonnegative(),
   fat: z.number().nonnegative(),
+  guessed: z.boolean().optional(),
 });
 
 export const parseMealResponseSchema = z.object({

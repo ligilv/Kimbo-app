@@ -18,7 +18,8 @@ export interface FoodItem extends Nutrients {
   id: string;
   name: string;
   quantity: number;
-  unit: string;   
+  unit: string;
+  guessed?: boolean; // the amount was assumed, not stated
 }
 
 export interface MealLog {
@@ -26,7 +27,7 @@ export interface MealLog {
   date: string; // local calendar date 'YYYY-MM-DD', not an ISO timestamp
   slot: MealSlot;
   items: FoodItem[];
-  rawText: string; 
+  rawText: string;
   createdAt: string; // ISO timestamp
   updatedAt: string;
 }
