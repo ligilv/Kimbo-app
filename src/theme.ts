@@ -1,15 +1,19 @@
 import { DefaultTheme, type Theme } from '@react-navigation/native';
 
-// Contrast on cream: ink 12.9:1, green 8.4:1, terracotta 3.5:1, turmeric 1.8:1.
-// So turmeric is a fill (with ink text on it, 7.1:1), never text on cream,
-// and terracotta text needs to be large/bold or paired with an icon.
+// Black and white only, light theme only. Urgency is shown by lightness, never
+// by hue: normal = outlined, soon = grey well, overdue = solid black.
+// Contrast on white: ink 18.9:1, muted 5.3:1 (AA for body text).
 export const colors = {
-  primary: '#1F4D3A', // deep forest green: icon background, app primary
-  background: '#F6EFE2', // warm cream: ring and face, app background
-  surface: '#FFFFFF', // cards and Kimbo's chat bubbles on cream
-  accent: '#F2A33A', // turmeric: ring tip, streaks, CTAs
-  text: '#1C2B24', // green-black ink
-  alert: '#D9532F', // terracotta: over-target and out-of-range flags
+  ink: '#111111', // text, primary buttons, overdue cards
+  ground: '#FFFFFF', // app background
+  muted: '#6B6B6B', // secondary text
+  line: '#E5E5E5', // outlines and dividers
+  well: '#F5F5F5', // Mira's bubbles, inputs, "soon" cards
+  // Older names kept so shared components read naturally.
+  primary: '#111111',
+  background: '#FFFFFF',
+  surface: '#F5F5F5',
+  text: '#111111',
 } as const;
 
 // Nunito, one file per weight. The family name is the file name on Android and the
@@ -20,11 +24,9 @@ export const fonts = {
   regular: 'Nunito-Regular', // body text
   semiBold: 'Nunito-SemiBold', // labels, buttons
   bold: 'Nunito-Bold', // headings
-  extraBold: 'Nunito-ExtraBold', // big numbers (calories, macros)
+  extraBold: 'Nunito-ExtraBold', // big numbers
 } as const;
 
-// Spacing and corner radii already used across onboarding. New screens should use
-// these instead of typing numbers.
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 } as const;
 export const radius = { sm: 12, md: 16, lg: 20, xl: 24, pill: 999 } as const;
 
@@ -32,12 +34,12 @@ export const navigationTheme: Theme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: colors.primary,
-    background: colors.background,
-    card: colors.background,
-    text: colors.text,
-    border: 'rgba(28, 43, 36, 0.12)', // ink at 12%
-    notification: colors.alert,
+    primary: colors.ink,
+    background: colors.ground,
+    card: colors.ground,
+    text: colors.ink,
+    border: colors.line,
+    notification: colors.ink,
   },
   fonts: {
     regular: { fontFamily: fonts.regular, fontWeight: 'normal' },

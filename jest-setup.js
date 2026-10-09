@@ -34,3 +34,9 @@ jest.mock('@dbkable/react-native-speech-to-text', () => {
     addSpeechEndListener: jest.fn(() => subscription),
   };
 });
+
+// The document picker is a native module (and ships ESM).
+jest.mock('@react-native-documents/picker', () => ({
+  pick: jest.fn(),
+  types: { pdf: 'application/pdf' },
+}));

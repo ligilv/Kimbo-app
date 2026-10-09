@@ -1,4 +1,4 @@
-import { TriangleAlert } from 'lucide-react-native';
+import TriangleAlert from 'lucide-react-native/icons/triangle-alert';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -7,7 +7,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import Animated, { ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { Text } from '@/components/Text';
 import { deleteServerData } from '@/features/sync/sync';
 import { storage } from '@/storage';
@@ -15,8 +15,8 @@ import { colors, fonts, radius, spacing } from '@/theme';
 
 const WHAT_GOES = [
   'Your profile and daily targets',
-  'Every meal you’ve logged',
-  'The copy saved on Kimbo’s server',
+  'Every meal, medicine and report',
+  'The copy saved on Mira’s server',
 ];
 
 // Deletes the server copy first, so nothing is left behind. Wiping the phone
@@ -41,17 +41,17 @@ export function DeleteDataModal({ onClose }: { onClose: () => void }) {
     >
       <View style={styles.backdrop}>
         <Animated.View
-          entering={ZoomIn.springify().damping(20).stiffness(220)}
+          entering={FadeIn.duration(150)}
           style={styles.card}
           accessibilityViewIsModal
         >
           <View style={styles.icon}>
-            <TriangleAlert size={28} color={colors.alert} />
+            <TriangleAlert size={28} color={colors.ink} />
           </View>
 
           {state === 'offline' ? (
             <>
-              <Text style={styles.title}>Couldn’t reach Kimbo’s server</Text>
+              <Text style={styles.title}>Couldn’t reach Mira’s server</Text>
               <Text style={styles.body}>
                 Your data on the server can’t be deleted right now. You can try
                 again later, or delete it from this phone only. The server copy
@@ -85,7 +85,7 @@ export function DeleteDataModal({ onClose }: { onClose: () => void }) {
             ]}
           >
             {busy ? (
-              <ActivityIndicator color={colors.surface} />
+              <ActivityIndicator color={colors.ground} />
             ) : (
               <Text style={styles.dangerText}>
                 {state === 'offline'
@@ -119,7 +119,7 @@ export function DeleteDataModal({ onClose }: { onClose: () => void }) {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(28, 43, 36, 0.45)',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.xl,
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 360,
-    backgroundColor: colors.background,
+    backgroundColor: colors.ground,
     borderRadius: radius.xl,
     padding: spacing.xl,
     gap: spacing.md,
@@ -138,21 +138,21 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(217, 83, 47, 0.12)',
+    backgroundColor: colors.well,
   },
   title: { fontSize: 22, fontFamily: fonts.extraBold },
   body: { fontSize: 15, lineHeight: 21, opacity: 0.8 },
   list: { gap: spacing.xs },
   item: { fontSize: 15, lineHeight: 21 },
-  warning: { fontSize: 15, fontFamily: fonts.bold, color: colors.alert },
+  warning: { fontSize: 15, fontFamily: fonts.bold, color: colors.ink },
   button: {
     minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radius.pill,
   },
-  danger: { backgroundColor: colors.alert, marginTop: spacing.sm },
-  dangerText: { fontSize: 16, fontFamily: fonts.bold, color: colors.surface },
+  danger: { backgroundColor: colors.ink, marginTop: spacing.sm },
+  dangerText: { fontSize: 16, fontFamily: fonts.bold, color: colors.ground },
   keepText: { fontSize: 16, fontFamily: fonts.bold, color: colors.primary },
   hidden: { opacity: 0 },
   pressed: { opacity: 0.8 },

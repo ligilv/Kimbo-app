@@ -1,6 +1,6 @@
 import type { MealSlot } from '@/features/meals/types';
 
-// What the backend's POST /parse-meal is expected to return (see KIMBO_HOME_PLAN.md,
+// What the backend's POST /parse-meal is expected to return (see the planning notes,
 // the server parse endpoint). Used to fill the app with realistic meals until the server exists.
 export type ParsedItem = {
   name: string;

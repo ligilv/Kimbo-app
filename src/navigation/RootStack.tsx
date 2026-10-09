@@ -1,114 +1,65 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import {
-  createStaticNavigation,
-  type StaticParamList,
-} from '@react-navigation/native';
+import { createStaticNavigation, type StaticParamList } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { House, type LucideIcon, UserRound } from 'lucide-react-native';
-import { StyleSheet, View } from 'react-native';
-import { useIsOnboarded } from '@/features/onboarding/useOnboarding';
-import { HomeScreen } from '@/screens/HomeScreen';
-import { LogMealScreen } from '@/screens/LogMealScreen';
+import HeartPulse from 'lucide-react-native/icons/heart-pulse';
+import MessageCircle from 'lucide-react-native/icons/message-circle';
+import type { LucideIcon } from 'lucide-react-native';
+import type { ComponentType } from 'react';
+import { isComplete } from '@/features/onboarding/script';
+import type { Profile } from '@/features/onboarding/types';
+import { useAnswers, useIsOnboarded } from '@/features/onboarding/useOnboarding';
+import { HealthScreen } from '@/screens/HealthScreen';
 import { OnboardingScreen } from '@/screens/OnboardingScreen';
-import { ProfileScreen } from '@/screens/ProfileScreen';
-import { ProgressScreen } from '@/screens/ProgressScreen';
+import { ReportResultScreen } from '@/screens/ReportResultScreen';
+import { TodayScreen } from '@/screens/TodayScreen';
 import { WelcomeScreen } from '@/screens/WelcomeScreen';
 import { colors, fonts, navigationTheme } from '@/theme';
-import { KimboTabButton } from './KimboTabButton';
-import { navigationRef } from './navigationRef';
 
 const useNeedsOnboarding = () => !useIsOnboarded();
 
-const NoScreen = () => <View />;
+// Tabs only exist after onboarding, so the profile is complete there.
+const withProfile = (Screen: ComponentType<{ profile: Profile }>) =>
+  function WithProfile() {
+    const [answers] = useAnswers();
+    return isComplete(answers) ? <Screen profile={answers} /> : null;
+  };
 
-// The selected tab gets a filled pill behind its icon, so it reads at a glance.
 const tabIcon =
   (Icon: LucideIcon) =>
-  ({ focused, color }: { focused: boolean; color: string }) =>
-    (
-      <View style={[styles.pill, focused && styles.pillOn]}>
-        <Icon color={color} size={22} strokeWidth={focused ? 2.5 : 2} />
-      </View>
-    );
+  ({ color, focused }: { color: string; focused: boolean }) =>
+    <Icon color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} />;
 
 const MainTabs = createBottomTabNavigator({
   screenOptions: {
     headerShown: false,
-    tabBarActiveTintColor: colors.primary,
-    tabBarInactiveTintColor: 'rgba(28, 43, 36, 0.45)',
+    tabBarHideOnKeyboard: true,
+    tabBarActiveTintColor: colors.ink,
+    tabBarInactiveTintColor: colors.muted,
     tabBarLabelStyle: { fontFamily: fonts.bold, fontSize: 12 },
-    tabBarStyle: {
-      backgroundColor: colors.background,
-      borderTopColor: 'rgba(28, 43, 36, 0.12)',
-    },
+    // Same white as the app, so the system bar area never shows a different colour.
+    tabBarStyle: { backgroundColor: colors.ground, borderTopColor: colors.line },
   },
   screens: {
-    Home: {
-      screen: HomeScreen,
-      options: {
-        tabBarIcon: tabIcon(House),
-      },
-    },
-    Kimbo: {
-      screen: NoScreen,
-      options: { tabBarButton: () => <KimboTabButton /> },
-      listeners: { tabPress: e => e.preventDefault() },
-    },
-    Profile: {
-      screen: ProfileScreen,
-      options: {
-        tabBarIcon: tabIcon(UserRound),
-      },
-    },
+    Today: { screen: withProfile(TodayScreen), options: { tabBarIcon: tabIcon(MessageCircle) } },
+    Health: { screen: withProfile(HealthScreen), options: { tabBarIcon: tabIcon(HeartPulse) } },
   },
 });
 
 const RootStack = createNativeStackNavigator({
+  screenOptions: { headerShown: false, contentStyle: { backgroundColor: colors.ground } },
   screens: {
-    Welcome: {
-      if: useNeedsOnboarding,
-      screen: WelcomeScreen,
-      options: { headerShown: false },
-    },
-    Onboarding: {
-      if: useNeedsOnboarding,
-      screen: OnboardingScreen,
-      options: { headerShown: false },
-    },
-    MainTabs: {
-      if: useIsOnboarded,
-      screen: MainTabs,
-      options: { headerShown: false },
-    },
-    LogMeal: {
-      if: useIsOnboarded,
-      screen: LogMealScreen,
-      options: { headerShown: false, presentation: 'fullScreenModal' },
-    },
-    Progress: {
-      if: useIsOnboarded,
-      screen: ProgressScreen,
-      options: { headerShown: false },
-    },
+    Welcome: { if: useNeedsOnboarding, screen: WelcomeScreen },
+    Onboarding: { if: useNeedsOnboarding, screen: OnboardingScreen },
+    MainTabs: { if: useIsOnboarded, screen: MainTabs },
+    ReportResult: { if: useIsOnboarded, screen: ReportResultScreen },
   },
 });
 
 const StaticNavigation = createStaticNavigation(RootStack);
 
 export function Navigation() {
-  return <StaticNavigation ref={navigationRef} theme={navigationTheme} />;
+  return <StaticNavigation theme={navigationTheme} />;
 }
-
-const styles = StyleSheet.create({
-  pill: {
-    width: 56,
-    height: 30,
-    borderRadius: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pillOn: { backgroundColor: 'rgba(31, 77, 58, 0.14)' },
-});
 
 type RootStackParamList = StaticParamList<typeof RootStack>;
 

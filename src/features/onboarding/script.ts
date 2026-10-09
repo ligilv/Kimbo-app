@@ -1,5 +1,6 @@
 import { calculateTargets, type Targets } from './targets';
 import type { Answers, Profile } from './types';
+import { formatTime } from '@/engine/time';
 import { formatHeight, formatWeight } from './units';
 
 type Option<T extends string> = { value: T; label: string; hint?: string };
@@ -14,20 +15,24 @@ export type StepInput =
   | { kind: 'age' }
   | { kind: 'height' }
   | { kind: 'weight'; field: 'weightKg' | 'targetWeightKg' }
+  | { kind: 'mealTimes' }
+  | { kind: 'report' }
   | { kind: 'finish' };
 
 export type Step = {
   id: string;
   topic: string; // short name for the welcome-back screen, e.g. "Your height"
 
-  kimbo: (a: Answers) => string;
+  mira: (a: Answers) => string;
   input: StepInput;
   skip?: (a: Answers) => boolean;
   isAnswered: (a: Answers) => boolean;
+  // Not needed for the calorie maths; profiles from before it existed still work.
+  extra?: true;
   reply?: (a: Answers) => string; // the user's bubble once answered
 };
 
-// Name as Kimbo says it: first letter capitalised. The stored answer stays as typed.
+// Name as Mira says it: first letter capitalised. The stored answer stays as typed.
 export const displayName = (a: Answers) => {
   const name = a.name?.trim() ?? '';
   return name.charAt(0).toUpperCase() + name.slice(1);
@@ -87,7 +92,9 @@ const targetIsValid = (a: Answers) =>
     : a.targetWeightKg > a.weightKg);
 
 export const isComplete = (a: Answers): a is Profile =>
-  STEPS.every(s => s.input.kind === 'finish' || s.skip?.(a) || s.isAnswered(a));
+  STEPS.every(
+    s => s.input.kind === 'finish' || s.extra || s.skip?.(a) || s.isAnswered(a),
+  );
 
 export const targetsFor = (p: Profile): Targets =>
   calculateTargets({
@@ -95,41 +102,42 @@ export const targetsFor = (p: Profile): Targets =>
     targetWeightKg: needsTarget(p) ? p.targetWeightKg : undefined,
   });
 
-const planMessage = (a: Answers) => {
-  if (!isComplete(a)) return '';
+// One or two plain sentences on where the number comes from (TDEE -> deficit).
+export function planReason(a: Profile): string {
   const t = targetsFor(a);
   const kcal = (n: number) => n.toLocaleString('en-IN');
   const why =
     a.goal === 'maintain'
-      ? `That's what your body burns on a normal day (${kcal(
-          t.tdee,
-        )} kcal), so your weight stays steady.`
+      ? `That's what your body burns on a normal day, so your weight stays steady.`
       : a.goal === 'lose'
-      ? `Your body burns about ${kcal(t.tdee)} kcal a day. Eating ${kcal(
-          t.tdee - t.calories,
-        )} less means about ${t.kgPerWeek} kg a week.`
-      : `Your body burns about ${kcal(t.tdee)} kcal a day. A small ${kcal(
-          t.calories - t.tdee,
-        )} kcal extra builds muscle without much fat.`;
+      ? `Your body burns about ${kcal(t.tdee)} kcal a day. Eating ${kcal(t.tdee - t.calories)} less means about ${t.kgPerWeek} kg a week.`
+      : `Your body burns about ${kcal(t.tdee)} kcal a day. A small ${kcal(t.calories - t.tdee)} kcal extra builds muscle without much fat.`;
   const when = t.weeksToTarget
-    ? ` At that pace you'd reach ${formatWeight(
-        a.targetWeightKg!,
-        a.weightUnit ?? 'kg',
-      )} in about ${t.weeksToTarget} weeks.`
+    ? ` At that pace you'd reach ${formatWeight(a.targetWeightKg!, a.weightUnit ?? 'kg')} in about ${t.weeksToTarget} weeks.`
     : '';
-  return `Here's your plan, ${displayName(a)} 🎯\n\n${kcal(
-    t.calories,
-  )} kcal a day\nProtein ${t.proteinG} g · Carbs ${t.carbsG} g · Fat ${
-    t.fatG
-  } g\n\n${why}${when}`;
+  return why + when;
+}
+
+const timesReply = (a: Answers) => {
+  const t = a.mealTimes;
+  if (!t) return '';
+  if (t.varies) return 'My times vary a lot';
+  return [
+    `Breakfast ${formatTime(t.breakfast)}`,
+    `Lunch ${formatTime(t.lunch)}`,
+    t.snacks && `Snack ${formatTime(t.snacks)}`,
+    `Dinner ${formatTime(t.dinner)}`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 };
 
 export const STEPS: Step[] = [
   {
     id: 'name',
     topic: 'Your name',
-    // The welcome screen already introduced Kimbo, so go straight in.
-    kimbo: () => "Let's start with an easy one 👋 What should I call you?",
+    // The welcome screen already introduced Mira, so go straight in.
+    mira: () => "Let's start with an easy one. What should I call you?",
     input: { kind: 'text', field: 'name', placeholder: 'Your name' },
     isAnswered: a => !!a.name?.trim(),
     reply: a => a.name ?? '',
@@ -137,19 +145,25 @@ export const STEPS: Step[] = [
   {
     id: 'goal',
     topic: 'Your goal',
-    kimbo: a =>
-      `Nice to meet you, ${displayName(a)}! What brings you to Kimbo?`,
+    mira: a =>
+      `Nice to meet you, ${displayName(a)}. What would you like help with?`,
     input: { kind: 'choice', field: 'goal', options: GOALS },
     isAnswered: a => a.goal !== undefined,
     reply: a => label(GOALS, a.goal),
   },
   {
+    id: 'activity',
+    topic: 'How active you are',
+    mira: a =>
+      `${a.goal ? GOAL_REACTION[a.goal] : ''} How active is a normal day for you?`,
+    input: { kind: 'choice', field: 'activity', options: ACTIVITIES },
+    isAnswered: a => a.activity !== undefined,
+    reply: a => label(ACTIVITIES, a.activity),
+  },
+  {
     id: 'sex',
     topic: 'A few body basics',
-    kimbo: a =>
-      `${
-        a.goal ? GOAL_REACTION[a.goal] : ''
-      } For the calorie maths I need a few body basics.\n\nAre you…`,
+    mira: () => 'For the calorie maths I need a few body basics. Are you…',
     input: { kind: 'choice', field: 'sex', options: SEXES },
     isAnswered: a => a.sex !== undefined,
     reply: a => label(SEXES, a.sex),
@@ -157,7 +171,7 @@ export const STEPS: Step[] = [
   {
     id: 'age',
     topic: 'Your age',
-    kimbo: () => 'How old are you?',
+    mira: () => 'How old are you?',
     input: { kind: 'age' },
     isAnswered: a => a.age !== undefined,
     reply: a => `${a.age}`,
@@ -165,7 +179,7 @@ export const STEPS: Step[] = [
   {
     id: 'height',
     topic: 'Your height',
-    kimbo: () => 'Thanks! How tall are you?',
+    mira: () => 'Thanks! How tall are you?',
     input: { kind: 'height' },
     isAnswered: a => a.heightCm !== undefined,
     reply: a => formatHeight(a.heightCm!, a.heightUnit ?? 'cm'),
@@ -173,7 +187,7 @@ export const STEPS: Step[] = [
   {
     id: 'weight',
     topic: 'Your weight',
-    kimbo: () => 'And your current weight?',
+    mira: () => 'And your current weight?',
     input: { kind: 'weight', field: 'weightKg' },
     isAnswered: a => a.weightKg !== undefined,
     reply: a => formatWeight(a.weightKg!, a.weightUnit ?? 'kg'),
@@ -181,7 +195,7 @@ export const STEPS: Step[] = [
   {
     id: 'target',
     topic: 'Your target weight',
-    kimbo: a =>
+    mira: a =>
       a.goal === 'lose'
         ? 'What weight would you like to get down to?'
         : 'What weight would you like to build up to?',
@@ -193,25 +207,37 @@ export const STEPS: Step[] = [
     reply: a => formatWeight(a.targetWeightKg!, a.weightUnit ?? 'kg'),
   },
   {
-    id: 'activity',
-    topic: 'How active you are',
-    kimbo: () => 'How active is a normal day for you?',
-    input: { kind: 'choice', field: 'activity', options: ACTIVITIES },
-    isAnswered: a => a.activity !== undefined,
-    reply: a => label(ACTIVITIES, a.activity),
-  },
-  {
     id: 'diet',
     topic: 'What you eat',
-    kimbo: () => 'Last one! What do you usually eat?',
+    mira: () => 'What do you usually eat? I use it to suggest foods that fit.',
     input: { kind: 'choice', field: 'diet', options: DIETS },
     isAnswered: a => a.diet !== undefined,
     reply: a => label(DIETS, a.diet),
   },
   {
+    id: 'mealTimes',
+    topic: 'Your meal times',
+    mira: () =>
+      "When do you usually eat? I'll check in around these times, never before.",
+    input: { kind: 'mealTimes' },
+    extra: true,
+    isAnswered: a => a.mealTimes !== undefined,
+    reply: timesReply,
+  },
+  {
+    id: 'report',
+    topic: 'A blood report (optional)',
+    mira: () =>
+      "Last one, and it's optional. Got a recent blood report? Send a photo or PDF and I'll tell you, in plain words, what needs attention.",
+    input: { kind: 'report' },
+    extra: true,
+    isAnswered: a => a.reportStep !== undefined,
+    reply: a => (a.reportStep === 'uploaded' ? 'Sent my report' : 'Skip for now'),
+  },
+  {
     id: 'plan',
     topic: 'Your plan',
-    kimbo: planMessage,
+    mira: a => `Here's what I'll help with, ${displayName(a)}.`,
     input: { kind: 'finish' },
     isAnswered: () => false,
   },

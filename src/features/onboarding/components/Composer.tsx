@@ -1,9 +1,14 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Button } from '@/components/Button';
 import { Text } from '@/components/Text';
+import { formatTime } from '@/engine/time';
+import { flagged, getReports, latestReport } from '@/features/reports/reportStore';
+import { useReportUpload } from '@/features/reports/useReportUpload';
 import { colors, fonts } from '@/theme';
-import type { Step, StepInput } from '../script';
-import type { Answers } from '../types';
+import { isComplete, planReason, type Step, type StepInput, targetsFor } from '../script';
+import { type Answers, DEFAULT_MEAL_TIMES } from '../types';
+import { MealTimesEditor } from './MealTimesEditor';
 import { cmToFtIn, formatWeight, ftInToCm, kgToLb, lbToKg } from '../units';
 
 type Props = {
@@ -45,17 +50,88 @@ export function Composer({ step, answers, onSubmit, onFinish }: Props) {
           onSubmit={onSubmit}
         />
       );
-    case 'finish':
+    case 'mealTimes':
       return (
-        <Pressable
-          onPress={onFinish}
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.cta, pressed && styles.pressed]}
-        >
-          <Text style={styles.ctaText}>Log my first meal</Text>
-        </Pressable>
+        <MealTimesEditor
+          initial={answers.mealTimes}
+          onSave={mealTimes => onSubmit({ mealTimes })}
+        />
       );
+    case 'report':
+      return <ReportComposer onSubmit={onSubmit} />;
+    case 'finish':
+      return <FinishCards answers={answers} onFinish={onFinish} />;
   }
+}
+
+function ReportComposer({ onSubmit }: { onSubmit: (patch: Answers) => void }) {
+  const { state, upload, reading } = useReportUpload();
+  const send = async (source: 'camera' | 'gallery' | 'pdf') => {
+    if (await upload(source)) onSubmit({ reportStep: 'uploaded' });
+  };
+  if (reading)
+    return (
+      <View style={[styles.row, styles.reading]}>
+        <ActivityIndicator color={colors.ink} />
+        <Text style={styles.hint}>Reading your report. About 20 seconds…</Text>
+      </View>
+    );
+  return (
+    <View style={styles.stack}>
+      {state.kind === 'error' && <Text style={styles.hint}>{state.text}</Text>}
+      <View style={styles.row}>
+        <Button small variant="outline" label="Take a photo" onPress={() => send('camera')} style={styles.grow} />
+        <Button small variant="outline" label="Photo" onPress={() => send('gallery')} style={styles.grow} />
+        <Button small variant="outline" label="PDF" onPress={() => send('pdf')} style={styles.grow} />
+      </View>
+      <Button small variant="ghost" label="Skip for now" onPress={() => onSubmit({ reportStep: 'skipped' })} />
+    </View>
+  );
+}
+
+// "Here's what I'll help with": your target, your report, your routine.
+function FinishCards({ answers, onFinish }: { answers: Answers; onFinish: () => void }) {
+  if (!isComplete(answers)) return null;
+  const t = targetsFor(answers);
+  const report = latestReport(getReports());
+  const bad = report ? flagged(report) : [];
+  const times = answers.mealTimes ?? DEFAULT_MEAL_TIMES;
+  const cards = [
+    {
+      title: `${t.calories.toLocaleString('en-IN')} kcal and ${t.proteinG} g protein a day`,
+      body: planReason(answers),
+    },
+    report
+      ? {
+          title: bad.length
+            ? `${bad.length} of ${report.values.length} report values need attention`
+            : 'Your report looks fine',
+          body: bad.length
+            ? `I'll ask about ${bad[0].label} first and help you follow up.`
+            : 'Nothing to follow up. Add a new one from Health any time.',
+        }
+      : {
+          title: 'Your reports, when you have one',
+          body: "Add a blood report from Health and I'll tell you what needs attention.",
+        },
+    {
+      title: 'Short check-ins, at your times',
+      body: answers.mealTimes?.varies
+        ? "Your times vary, so I'll keep check-ins light."
+        : `Around ${formatTime(times.breakfast)}, ${formatTime(times.lunch)} and ${formatTime(times.dinner)}. Snap, say or type what you ate.`,
+    },
+  ];
+  return (
+    <View style={styles.stack}>
+      {cards.map(card => (
+        <View key={card.title} style={styles.helpCard}>
+          <Text style={styles.helpTitle}>{card.title}</Text>
+          <Text style={styles.hint}>{card.body}</Text>
+        </View>
+      ))}
+      <Button label="Start with today" onPress={onFinish} />
+    </View>
+  );
 }
 
 function SendButton({
@@ -101,7 +177,7 @@ function TextComposer({
         value={value}
         onChangeText={setValue}
         placeholder={input.placeholder}
-        placeholderTextColor="rgba(28, 43, 36, 0.45)"
+        placeholderTextColor={colors.muted}
         autoFocus
         autoCapitalize="words"
         maxLength={30}
@@ -484,7 +560,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: colors.surface,
     borderWidth: 1.5,
-    borderColor: 'rgba(31, 77, 58, 0.25)',
+    borderColor: colors.line,
   },
   choiceSelected: { borderColor: colors.primary, borderWidth: 2 },
   choiceLabel: {
@@ -496,7 +572,7 @@ const styles = StyleSheet.create({
   toggle: {
     flexDirection: 'row',
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(31, 77, 58, 0.1)',
+    backgroundColor: colors.well,
     borderRadius: 18,
     padding: 3,
   },
@@ -544,14 +620,16 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   suffix: { flex: 1, fontSize: 16, marginLeft: 6, opacity: 0.7 },
-  hint: { fontSize: 14, color: colors.text, opacity: 0.75, paddingLeft: 8 },
-  cta: {
-    backgroundColor: colors.accent,
-    borderRadius: 24,
-    minHeight: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
+  hint: { fontSize: 14, lineHeight: 20, color: colors.muted },
+  grow: { flex: 1, paddingHorizontal: 8 },
+  reading: { minHeight: 48 },
+  helpCard: {
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: 16,
+    padding: 14,
+    gap: 2,
   },
-  ctaText: { fontSize: 17, fontFamily: fonts.bold, color: colors.text },
+  helpTitle: { fontSize: 16, fontFamily: fonts.bold },
   pressed: { opacity: 0.8 },
 });

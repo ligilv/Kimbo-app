@@ -1,83 +1,102 @@
-# Kimbo
+# Mira
 
-A calorie and protein tracker that feels like texting a friend. Tell Kimbo what you ate (type it, say it, or snap a photo) and it works out the calories and macros, then shows how your day is going against a target worked out from your body and goal.
+A health assistant that tells you the one thing that matters right now. Mira knows your meal times, reads your blood report, and asks short questions ("Your Vitamin D is low. Seen a doctor about it?") instead of handing you a dashboard to fill in.
 
 Built with React Native CLI (bare, new architecture, Hermes) and a small NestJS server.
 
-## Features
+## Reviewer feedback → what changed
 
-- **Chat onboarding.** Nine short questions (name, goal, body basics, activity, diet). Answers save as you go, so closing the app mid-way resumes with "welcome back" where you left off. Ends with your plan and why.
-- **Home.** Week strip with a mini ring per day, a big calorie ring (turns turmeric when you go over), protein/carbs/fat bars, and the day's meals by slot. Swipe left/right to change day. Tap the ring for "how your target is worked out".
-- **Log a meal three ways.** Type it ("2 chapati and dal"), say it (on-device speech-to-text, `en-IN`), or take/pick a photo. Kimbo replies with a confirmation card you can adjust (quantities, remove items) before saving. If the meal is vague it asks one follow-up question.
-- **Edit later.** Tap any food to change the amount, move it to another meal or day, or delete it.
-- **Kimbo nudge.** One message a day from simple rules: what to log next, a protein tip in the evening (matched to your diet), "on track", or a gentle note when you're over. Past days get a one-line recap.
-- **First launch.** Until the first meal is saved, Home shows your plan ("3,030 kcal and 115 g protein a day") with a button to log the first meal.
-- **Profile.** Your targets and every answer, grouped and editable. Saving recalculates the targets and shows a small celebration with the new numbers. "Delete my data" removes everything from the phone and the server.
-- **Streak.** "🔥 6" on Home counts days in a row with at least one meal. One missed day per week is forgiven as a rest day 🌙. A small celebration after the first meal of each day.
-- **Progress.** Last 7 or 30 days: average calories and protein against target, days on target, a bar per day, most-logged foods, and "Kimbo's take": two sentences from Gemini written from the summary (cached for the day; a rule-based line when offline).
-- **First-time guide.** A three-step spotlight tour of the tab bar, with Skip.
-- **Works offline.** Meals and the profile live on the phone; the server copy catches up in the background.
+| Feedback | What changed |
+|---|---|
+| "Feels like a 2016 data-logging app. If I drink less water, then what?" | Today is now a conversation, not a dashboard. Mira speaks first with the one next thing to do (log lunch, take a dose, follow up on a report value), with one-tap answers. Any number that didn't lead to an action was removed: no ring, no macro grid, no water, no week strip. |
+| "Act like a personal assistant: Vitamin D is low → have you seen a doctor? → set up the medicine → remind." | Exactly that flow: upload a report → "3 of 24 values need attention" → "Seen a doctor about it?" → *Yes, got a prescription* opens a one-sheet medicine setup → Mira asks at that time each day. *Not yet* explains why it matters, suggests foods that fit your diet, and asks again in 2 days. |
+| "STT detected wrong words; typing always threw an error." | Voice never logs anything directly: the words land in a **"Mira heard: …"** card you can edit, then *Looks right*. The typing error most likely came from the build pointing at `10.0.2.2`, an address that only works on the emulator; release builds now always use the deployed server, and every failure is a human sentence with *Try again*. |
+| "Show what was understood before logging." | Every log goes through a review card: items, portion steppers, a dashed **Guessed portion** badge where the amount was assumed, totals, then *Save as dinner*. Nothing is saved before that. Vague input gets one tap-to-answer question (*Half a katori / 1 katori / A plate / Just guess*). |
+| Header covering content; white band under the tab bar. | Solid headers, safe-area insets on the tab bar, and every surface is the same white, so there's no band. |
+| Four repeated empty meal cards. | Gone. A new user sees one message: "Let's log your first meal", with *Snap it / Say it / Skip*. |
+| Profile-update modal "weirdly loud". | Routine updates are a one-line toast ("Target updated to 1,390 kcal"). No celebration modals. |
 
-## How targets are calculated
+## How it works
 
-All in `src/features/onboarding/targets.ts`, and recalculated from your answers every time (never stored), so editing your profile updates every screen at once.
+### The engine (`src/engine/nextAction.ts`)
 
-1. **Calories burned at rest (BMR):** Mifflin-St Jeor: `10 × kg + 6.25 × cm − 5 × age + 5` (men) or `− 161` (women); `− 78` (the midpoint) for "prefer not to say".
-2. **A normal day (TDEE):** BMR × activity (1.2 mostly sitting, 1.375 on your feet some, 1.55 active, 1.725 very active).
-3. **Target:** TDEE − 500 to lose (about 0.45 kg a week), + 300 to build muscle, ± 0 to maintain. Never below 1,200 kcal.
-4. **Protein:** 1.6 g/kg when losing, 1.8 when gaining, 1.2 when maintaining. **Fat:** 25 % of calories. **Carbs:** the rest.
+A pure function, no React and no clock of its own, so every state of the Today screen is a unit test (`__tests__/nextAction.test.ts`). Given the time, your meal times, today's logs, medicines, open report follow-ups, skips and snoozes, it returns one action, in this order:
 
-Past days are compared against your *current* targets. If you change your goal, last week's rings redraw against the new numbers. Simplest to reason about; storing a target per day would be the upgrade.
+1. A medicine more than 30 min overdue (solid black message)
+2. A report follow-up waiting for an answer
+3. A meal more than an hour late (until the next meal's window opens, so a missed breakfast stops nagging at lunch)
+4. A meal whose window is open (30 min before to 60 min after your usual time)
+5. A medicine due within 30 min
+6. After 6 pm and under 60 % of your protein target: one food suggestion that respects veg / egg / non-veg
+7. Otherwise "All caught up. Next: lunch around 1:30 pm", or tomorrow's first meal
 
-These are estimates, not medical advice.
+A skip counts as handled for the day; a snooze brings it back later. Urgency is shown by lightness, never colour: normal grey, overdue solid black.
 
-## How meal parsing works
+### Today is rebuilt, not stored
 
-The app never holds an AI key. It sends the text and/or a compressed photo (max 1024 px, JPEG 70 %) to the server's `POST /meals/parse`. The server asks Google Gemini for structured JSON (each item with quantity, unit, kcal, protein, carbs, fat), validates it with zod, and returns it. If the main model is slow or overloaded it retries once on a lighter backup model. The prompt is tuned for Indian food and household units (katori, roti, plate).
+The conversation isn't saved as chat history. It's rebuilt from what happened (meals, doses, skips, follow-up answers, each with its time) plus the engine's next message (`src/features/today/feed.ts`). Editing or deleting a meal can never leave a stale message behind.
 
-If the description is too vague, Gemini returns one short question instead ("How many chapatis?"); your answer is sent back with the original text/photo.
+### Logging a meal
 
-Timeouts: 15 s for text, 35 s for photos. Failures show a retry bubble; nothing is lost.
+Snap, say or type, all from the composer at the bottom of Today. Text and photos go to `POST /meals/parse`; the server asks Gemini for structured JSON (validated with zod on both sides) with Indian household units. "Took my vitamin D" in the same box marks the dose as taken instead of being sent as food.
 
-## Insights
+### Reports
 
-`POST /insights` takes only numbers the app has already worked out (averages, days on target, calories per meal slot, top food names), never raw meal text. The server turns them into plain sentences ("Protein target reached on 0 of 6 logged days") before asking Gemini, so the model repeats facts instead of misreading numbers, and is told never to claim a target was met unless the facts say so.
+Photo or PDF → `POST /reports/extract` → Gemini reads the values, ranges and the test date, and writes one plain-language line, three short reasons and helpful foods for each flagged value. The result screen shows flagged values first with a range bar, the rest collapsed, and a trend line when the same value appears in more than one report ("14 Sep: 12.1 → 29 Sep: 14 · recheck ~28 Dec"). Each flagged value opens a follow-up that Mira asks about on Today. Not medical advice, and it says so.
 
-## Data storage
+### Targets
 
-- **On the phone (main copy):** MMKV key-value storage. Onboarding answers under one key; meals under one key per day (`meals.YYYY-MM-DD`, local calendar date, not UTC).
-- **On the server (backup):** Supabase Postgres via Prisma. Every change goes into a small queue on the phone (the outbox) and is sent in the background; failed sends retry every 30 s and when the app comes back to the foreground. Last write wins by the app's `updatedAt`.
-- **No accounts.** Each install gets a random device id, sent as `x-device-id`. It keeps phones apart; it is not authentication.
-- **Delete my data** calls `DELETE /me` (the database cascades to profile, meals, items), then wipes the phone. If the server can't be reached, you choose whether to wipe the phone only.
+`src/features/onboarding/targets.ts`: Mifflin-St Jeor BMR × activity = what you burn on a normal day; −500 kcal to lose (~0.45 kg/week), +300 to gain, never below 1,200. Protein 1.6 g/kg (lose), 1.8 (gain), 1.2 (maintain). Recalculated from your answers every time, never stored.
+
+## Cut, and why
+
+- **Water tracker:** a number with no "then what".
+- **Fitness / workouts:** out of scope for a food-and-health assistant; the activity level already shapes the target.
+- **Progress screen:** charts you look at once. The useful bit (are you short on protein?) is now something Mira says at the right time.
+- **Free-form chatbot:** an open chat box sets expectations it can't meet. The one input does food and "took my medicine"; everything else is a tap.
+- **Separate Profile tab:** editing your plan is rare; it lives behind *Edit plan* on Health.
+- **Always-visible 4-meal grid:** empty slots made new users feel behind. Logged meals appear as your replies in the conversation.
+- **Celebration modals for routine updates:** replaced by toasts.
+- **Login:** a device id keeps phones apart without a sign-up wall. Real accounts are the next step.
+
+## Why React Native CLI over Expo
+
+The app needs native modules that weren't available as Expo config plugins for RN 0.87 at the time (on-device speech recognition, MMKV via Nitro), and the bare project gives direct control over the APK (R8 shrinking, arm64-only).
+
+## Data
+
+- **Phone is the main copy** (MMKV): meals per local calendar day (`meals.YYYY-MM-DD`), medicines and per-day doses, reports and follow-ups, per-day skips/snoozes.
+- **Server copy:** profile and meals sync to Supabase Postgres in the background through an outbox (retries every 30 s and on foreground). Medicines and reports stay on the phone.
+- **Delete my data** (Health → Settings) removes the server copy, then wipes the phone.
 
 ## Project structure
 
 ```
 src/
-  screens/          Welcome, Onboarding, Home, LogMeal, Profile
+  engine/           nextAction (what Mira says next) + time helpers
+  screens/          Welcome, Onboarding, Today, Health, ReportResult
   features/
-    onboarding/     questions script, targets maths, units
-    meals/          meal store (MMKV), dates, hooks
-    home/           ring, bars, week strip, meals list, nudge rules
-    logMeal/        chat hook, parser client, photo, speech
-    kimbo/          the centre tab button's "log a meal" sheet
-    profile/        plan-updated and delete-data modals
+    today/          feed builder, logging flow, review/heard cards, sheets
+    reports/        report API, store + follow-ups, why-it-matters sheet
+    medicines/      medicine store, setup sheet, "took my…" matcher
+    onboarding/     question script, targets maths, meal times
+    meals/          meal store (MMKV), dates
+    logMeal/        meal parser client, photo, speech
+    day/            per-day skips and snoozes
     sync/           outbox, device id, background sync
-  components/       Text, BottomSheet, chat bubbles/input
-  navigation/       static React Navigation 7 stack + tabs
-../server/          NestJS API (parse, sync), Prisma schema
+  components/       Mascot, Button, Toast, BottomSheet, chat bubbles
+../server/          NestJS API: meals, reports, sync; Gemini + mock providers
 ```
 
 ## For reviewers: demo account
 
-On Profile, tap the version number (**Kimbo v1.0.0**) five times quickly and confirm. The app swaps in Ligil's profile and a month of meals ending today: a 23-day streak with one rest day 🌙, water history, and enough data for Progress and Kimbo's take. It works in release builds and replaces whatever was on the phone. The data is generated on the phone each time, so it always ends "today".
+Health → Settings (gear) → tap **Mira v1.0.0** five times and confirm. You get a month of meals ending now, a report from ten days ago with three flagged values (one being treated, one asked about today, one coming back in two days) and a daily Vitamin D3 with a week of doses. Generated on the phone, so it always ends "today".
 
 ## Run locally
 
 Requires Node ≥ 22.11 and a working [React Native environment](https://reactnative.dev/docs/set-up-your-environment).
 
 ```sh
-# app
 npm install
 npm start          # Metro
 npm run android    # second terminal
@@ -85,24 +104,22 @@ npm run ios        # first time: cd ios && bundle exec pod install
 
 # server (in ../server)
 npm install
-cp .env.example .env   # GEMINI_API_KEY, GEMINI_MODEL, GEMINI_FALLBACK_MODEL, DATABASE_URL, DIRECT_URL
-npx prisma migrate deploy --config prisma7.config.ts
+cp .env.example .env   # GEMINI_API_KEY, DATABASE_URL, DIRECT_URL; AI_PROVIDER=mock to skip Gemini
 npm run start:dev      # http://localhost:3000
 ```
 
-`src/config.ts` points the app at the server. The default `http://10.0.2.2:3000` reaches your computer from the Android emulator only; a real phone needs your computer's LAN IP or a deployed URL. Set `MEAL_PARSER = 'mock'` to try logging with no server at all.
+Debug builds talk to `http://10.0.2.2:3000` (your computer, from the Android emulator); release builds use **https://mira-api.onrender.com** (sleeps after 15 idle minutes; the app pings it on launch).
 
 ## Tests
 
 ```sh
-npm test              # app: targets, dates, meal store, parser, sync, nudge, speech
+npm test                    # engine, feed inputs, onboarding, targets, meal store, parser, sync, demo
 cd ../server && npm test
 ```
 
 ## Known limitations
 
-- **Voice** uses the phone's speech recogniser; some phones need internet for it, and the Android emulator gets no microphone audio unless started with host audio enabled.
-- **Calorie numbers are AI estimates.** The confirmation card exists so you can correct them.
-- **No restore after reinstall.** The server keeps a copy, but nothing downloads it back to a new install yet.
-- **Device id isn't login.** Anyone with the id could read that device's data; real accounts would be next.
-- **No manual food search** (needs a food database), weight tracking, progress charts, water, streaks or reminders.
+- **Voice** uses the phone's speech recogniser; some phones need internet for it. The editable "heard" card is the safety net for wrong words.
+- **Medicine reminders are in-app:** Mira asks on Today at the right time; there are no push notifications yet.
+- **Numbers are AI estimates.** The review card exists so you can correct them. Report reading is not medical advice.
+- **No restore after reinstall**, and a device id isn't login.

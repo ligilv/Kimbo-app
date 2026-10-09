@@ -1,10 +1,10 @@
 import {
   isComplete,
   onboardingProgress,
-  STEPS,
+  planReason,
   visibleSteps,
 } from '@/features/onboarding/script';
-import type { Answers } from '@/features/onboarding/types';
+import { type Answers, DEFAULT_MEAL_TIMES, type Profile } from '@/features/onboarding/types';
 
 const ids = (a: Answers) => visibleSteps(a).map(s => s.id);
 
@@ -39,20 +39,21 @@ test('switching goal to gain re-asks a target that now points the wrong way', ()
   expect(isComplete(a)).toBe(false);
 });
 
-test('a finished profile ends on the plan with real numbers', () => {
-  expect(ids(done).at(-1)).toBe('plan');
-  const plan = STEPS.find(s => s.id === 'plan')!.kimbo(done);
-  expect(plan).toContain('2,210 kcal a day');
-  expect(plan).toContain('about 14 weeks');
+test('a finished profile asks meal times and the optional report, then the plan', () => {
+  expect(ids(done).at(-1)).toBe('mealTimes');
+  expect(isComplete(done)).toBe(true); // meal times and report aren't needed for the maths
+  const answered = { ...done, mealTimes: DEFAULT_MEAL_TIMES, reportStep: 'skipped' as const };
+  expect(ids(answered).at(-1)).toBe('plan');
+  expect(planReason(done as Profile)).toContain('about 14 weeks');
 });
 
 test('progress counts only the questions that apply', () => {
   expect(onboardingProgress({ name: 'Ligil', goal: 'lose' })).toMatchObject({
     done: 2,
-    total: 9, // includes the target weight question
-    next: { id: 'sex' },
+    total: 11, // includes the target weight question
+    next: { id: 'activity' },
   });
-  expect(onboardingProgress({ name: 'Ligil', goal: 'maintain' }).total).toBe(8);
-  expect(onboardingProgress({ name: 'Ligil' }).total).toBe(9); // goal not picked yet
+  expect(onboardingProgress({ name: 'Ligil', goal: 'maintain' }).total).toBe(10);
+  expect(onboardingProgress({ name: 'Ligil' }).total).toBe(11); // goal not picked yet
 });
 

@@ -1,4 +1,3 @@
-import LottieView from 'lottie-react-native';
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
@@ -9,6 +8,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import { Mascot } from '@/components/Mascot';
 import { colors } from '@/theme';
 
 function Dot({ delay }: { delay: number }) {
@@ -16,38 +16,17 @@ function Dot({ delay }: { delay: number }) {
   useEffect(() => {
     lift.value = withDelay(
       delay,
-      withRepeat(
-        withSequence(
-          withTiming(-4, { duration: 250 }),
-          withTiming(0, { duration: 250 }),
-        ),
-        -1,
-      ),
+      withRepeat(withSequence(withTiming(-4, { duration: 250 }), withTiming(0, { duration: 250 })), -1),
     );
   }, [delay, lift]);
-  const style = useAnimatedStyle(() => ({
-    transform: [{ translateY: lift.value }],
-  }));
+  const style = useAnimatedStyle(() => ({ transform: [{ translateY: lift.value }] }));
   return <Animated.View style={[styles.dot, style]} />;
 }
 
-// Kimbo's avatar spins (the loader animation) while three dots bounce.
 export function TypingIndicator() {
   return (
-    <View
-      style={styles.row}
-      accessible
-      accessibilityLabel="Kimbo is typing"
-      accessibilityLiveRegion="polite"
-    >
-      <View style={styles.avatar}>
-        <LottieView
-          source={require('@/assets/lottie/kimbo_loader_light_bg.json')}
-          autoPlay
-          loop
-          style={styles.lottie}
-        />
-      </View>
+    <View style={styles.row} accessible accessibilityLabel="Mira is typing" accessibilityLiveRegion="polite">
+      <Mascot size={32} />
       <View style={styles.bubble}>
         <Dot delay={0} />
         <Dot delay={150} />
@@ -58,30 +37,15 @@ export function TypingIndicator() {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
-  avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  lottie: { width: 40, height: 40 },
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   bubble: {
     flexDirection: 'row',
     gap: 5,
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderRadius: 20,
-    borderBottomLeftRadius: 6,
-    backgroundColor: colors.surface,
+    borderTopLeftRadius: 6,
+    backgroundColor: colors.well,
   },
-  dot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: colors.primary,
-    opacity: 0.6,
-  },
+  dot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: colors.ink, opacity: 0.6 },
 });

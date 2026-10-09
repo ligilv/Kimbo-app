@@ -1,26 +1,22 @@
-import { useState } from 'react';
 import { StatusBar } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { KimboSheetProvider } from '@/features/kimbo/KimboSheetProvider';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ToastHost } from '@/components/Toast';
 import { Navigation } from '@/navigation/RootStack';
-import { seedMockMeals } from '@/mocks/seedMockMeals';
-import { SplashScreen } from '@/screens/SplashScreen';
 
-// Dev builds only: fills the last week with sample meals until the backend exists.
-seedMockMeals();
+// Above the tab bar and the composer.
+function Toasts() {
+  const insets = useSafeAreaInsets();
+  return <ToastHost bottom={insets.bottom + 132} />;
+}
 
 function App() {
-  const [showSplash, setShowSplash] = useState(true);
-
   return (
     <GestureHandlerRootView>
       <SafeAreaProvider>
         <StatusBar barStyle="dark-content" />
-        <KimboSheetProvider>
-          <Navigation />
-        </KimboSheetProvider>
-        {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
+        <Navigation />
+        <Toasts />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

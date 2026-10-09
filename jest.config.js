@@ -14,6 +14,8 @@ module.exports = {
     // Jest resolves its untransformed .mjs build; use the CommonJS one instead.
     '^lucide-react-native$':
       '<rootDir>/node_modules/lucide-react-native/dist/cjs/lucide-react-native.js',
+    '^lucide-react-native/icons/(.*)$':
+      '<rootDir>/node_modules/lucide-react-native/dist/cjs/icons/$1.js',
   },
   // Resolves the web build of Reanimated and Worklets instead of the native one.
   resolver: 'react-native-reanimated/jest/resolver',
