@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { nextAction } from '@/engine/nextAction';
 import { useDayState } from '@/features/day/dayState';
 import { type DateKey, toLocalDateKey } from '@/features/meals/dates';
+import { getLogsForDate, getTotalsForDate } from '@/features/meals/mealStore';
 import { useDayLogs, useHasAnyLogs } from '@/features/meals/useMeals';
 import { isDueOn, useDoses, useMedicines } from '@/features/medicines/medicineStore';
 import { displayName, targetsFor } from '@/features/onboarding/script';
 import { DEFAULT_MEAL_TIMES, type Profile } from '@/features/onboarding/types';
 import { dueFollowups, flagged, latestReport, useFollowups, useReports } from '@/features/reports/reportStore';
 import { buildFeed } from './feed';
+import { milestonesFor, streakLine } from './milestones';
 
 // Re-renders once a minute so "late" and meal windows move with the clock.
 export function useNow() {
@@ -53,6 +55,20 @@ export function useToday(profile: Profile, date: DateKey) {
       })
     : undefined;
 
+  // Past days are read straight from storage; only the day on screen changes live.
+  const hasMeals = (d: DateKey) => getLogsForDate(d).length > 0;
+  const times = logs.map(l => l.createdAt).sort();
+  const milestones = milestonesFor({
+    date,
+    hasMeals,
+    kcalOn: d => getTotalsForDate(d).kcal,
+    targetKcal: targets.calories,
+    firstMealAt: times[0],
+    lastMealAt: times.at(-1),
+    medicinesDue: medicines.length,
+    dosesTaken: medicines.flatMap(m => (doses[m.id]?.status === 'taken' ? [doses[m.id]] : [])),
+  });
+
   const feed = buildFeed({
     date,
     isToday,
@@ -69,6 +85,8 @@ export function useToday(profile: Profile, date: DateKey) {
         ? `${flaggedCount} of ${latest.values.length} values need attention`
         : undefined,
     proteinTarget: targets.proteinG,
+    streakLine: isToday ? streakLine(today, hasMeals) : undefined,
+    milestones,
     action,
   });
 

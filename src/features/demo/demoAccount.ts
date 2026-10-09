@@ -29,7 +29,7 @@ export const DEMO_PROFILE: Profile = {
 };
 
 export const DEMO_DAYS = 30;
-const MISSED = new Set([9, 24, 25, 26]); // a few empty days, like real life
+const MISSED = new Set([7, 24, 25, 26]); // a few empty days; day 7 back makes today a 7-day run
 const REPORT_DAYS_AGO = 10;
 
 const MENU: Record<MockMeal['slot'], (keyof typeof MOCK_MEALS)[]> = {

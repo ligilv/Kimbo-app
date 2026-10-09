@@ -248,7 +248,7 @@ export function TodayScreen({ profile }: { profile: Profile }) {
                 <MiraBubble
                   text={item.text}
                   inverted={item.action?.urgency === 'overdue'}
-                  mood={item.action ? moodFor(item.action) : 'smile'}
+                  mood={item.action ? moodFor(item.action) : item.mood ?? 'smile'}
                 >
                   {item.action && !flow.active && <ActionChips action={item.action} onChip={onChip} />}
                 </MiraBubble>

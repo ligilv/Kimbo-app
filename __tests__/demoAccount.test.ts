@@ -3,6 +3,7 @@ import { addDays, toLocalDateKey } from '@/features/meals/dates';
 import { getLogsForDate, loggedDays } from '@/features/meals/mealStore';
 import { getDoses, getMedicines } from '@/features/medicines/medicineStore';
 import { dueFollowups, getFollowups, getReports } from '@/features/reports/reportStore';
+import { runEndingOn } from '@/features/today/milestones';
 import { storage } from '@/storage';
 
 test('demo month: meals so far today, a report with one open follow-up, a medicine', () => {
@@ -15,6 +16,9 @@ test('demo month: meals so far today, a report with one open follow-up, a medici
   expect(loggedDays()).not.toContain('2020-01-01');
   // 2 pm: breakfast and lunch are eaten, snack and dinner not yet.
   expect(getLogsForDate(today).map(l => l.slot)).toEqual(['breakfast', 'lunch']);
+
+  // Today completes a 7-day run, so the reviewer sees a milestone straight away.
+  expect(runEndingOn(today, d => getLogsForDate(d).length > 0)).toBe(7);
 
   expect(getReports()).toHaveLength(1);
   expect(dueFollowups(getFollowups(), now).map(f => f.key)).toEqual(['vitamin_b12']);

@@ -1,3 +1,4 @@
+import type { Mood } from '@/components/Mascot';
 import type { NextAction } from '@/engine/nextAction';
 import { formatTime } from '@/engine/time';
 import type { DayState } from '@/features/day/dayState';
@@ -8,13 +9,14 @@ import type { MealLog, MealSlot, Nutrients } from '@/features/meals/types';
 import type { Dose, Medicine } from '@/features/medicines/medicineStore';
 import type { MealTimes } from '@/features/onboarding/types';
 import type { Followup } from '@/features/reports/reportStore';
+import type { Milestone } from './milestones';
 
 // Today is one conversation per day. It isn't stored as a chat: it's rebuilt
 // from what happened (meals, doses, skips, answers) plus what Mira says next,
 // so editing a meal or loading another day can never leave a stale message.
 
 export type FeedItem =
-  | { kind: 'mira'; id: string; text: string; action?: NextAction }
+  | { kind: 'mira'; id: string; text: string; action?: NextAction; mood?: Mood }
   | { kind: 'meal'; id: string; log: MealLog }
   | { kind: 'reply'; id: string; text: string };
 
@@ -30,6 +32,8 @@ export type FeedInput = {
   doses: Record<string, Dose>;
   followups: Followup[];
   flaggedSummary?: string; // "3 of 24 values need attention"
+  streakLine?: string; // "Day 4 in a row."
+  milestones?: Milestone[]; // placed at the moment they were earned
   proteinTarget: number;
   action?: NextAction; // today only
 };
@@ -86,7 +90,9 @@ export function mealReaction(meal: Nutrients, proteinTarget: number) {
 export function buildFeed(input: FeedInput): FeedItem[] {
   const items: FeedItem[] = [];
   const intro = input.isToday
-    ? [greeting(input.now, input.name), dayPlan(input.mealTimes, input.medicines)]
+    ? [greeting(input.now, input.name), input.streakLine, dayPlan(input.mealTimes, input.medicines)].filter(
+        (line): line is string => !!line,
+      )
     : [`Here's ${formatShortDate(input.date)}.`];
   if (input.isToday && input.flaggedSummary) intro.push(`From your report: ${input.flaggedSummary}.`);
   items.push({ kind: 'mira', id: 'intro', text: intro.join(' ') });
@@ -128,6 +134,11 @@ export function buildFeed(input: FeedInput): FeedItem[] {
   for (const f of input.followups) {
     if (f.answer && f.answeredAt && toLocalDateKey(new Date(f.answeredAt)) === input.date)
       events.push({ at: f.answeredAt, items: [{ kind: 'reply', id: `fu:${f.id}`, text: ANSWER_TEXT[f.answer] }] });
+  }
+
+  // Pushed last so a milestone earned with a meal lands just after that meal.
+  for (const m of input.milestones ?? []) {
+    events.push({ at: m.at, items: [{ kind: 'mira', id: m.id, text: m.text, mood: 'grin' }] });
   }
 
   events.sort((a, b) => a.at.localeCompare(b.at)).forEach(e => items.push(...e.items));
