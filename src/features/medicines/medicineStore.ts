@@ -1,3 +1,4 @@
+import { useMemo, useSyncExternalStore } from 'react';
 import { useMMKVObject } from 'react-native-mmkv';
 import { addDays, type DateKey, fromDateKey } from '@/features/meals/dates';
 import { newId } from '@/features/meals/mealStore';
@@ -64,6 +65,23 @@ export function adherence(medicine: Medicine, days: DateKey[], today: DateKey): 
 export function useMedicines(): Medicine[] {
   const [list] = useMMKVObject<Medicine[]>(MEDICINES, storage);
   return list ?? [];
+}
+
+// The week's dots, kept live: a dose taken from Today or from a notification
+// shows here straight away.
+const subscribeToDoses = (onChange: () => void) => {
+  const listener = storage.addOnValueChangedListener(key => {
+    if (key.startsWith('doses.')) onChange();
+  });
+  return () => listener.remove();
+};
+
+export function useAdherence(medicine: Medicine, days: DateKey[], today: DateKey): DayMark[] {
+  const snapshot = useSyncExternalStore(subscribeToDoses, () =>
+    days.map(day => storage.getString(dosesKey(day)) ?? '').join('|'),
+  );
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- recomputed when the doses snapshot changes
+  return useMemo(() => adherence(medicine, days, today), [medicine, snapshot, today]);
 }
 
 export function useDoses(date: DateKey): Record<string, Dose> {

@@ -11,6 +11,7 @@ import {
 } from '@/features/meals/mealStore';
 import type { FoodItem, MealSlot } from '@/features/meals/types';
 import { type MealPhoto, type ParseInput, parseMeal } from '@/features/logMeal/parseMeal';
+import { askForReminders } from '@/features/reminders/reminders';
 
 // Logging a meal happens inside the Today conversation:
 // say/type/snap -> (voice: "Mira heard…") -> (vague: one portion question)
@@ -158,6 +159,7 @@ export function useLogFlow(date: DateKey, defaultSlot: MealSlot) {
       { label: 'Undo', onPress: () => deleteLog(id) },
     );
     reset();
+    askForReminders(); // after the first meal: now reminders make sense
   };
 
   return {

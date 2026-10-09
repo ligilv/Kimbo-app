@@ -12,7 +12,7 @@ import { formatTime } from '@/engine/time';
 import { loadDemoAccount } from '@/features/demo/demoAccount';
 import { addDays, formatShortDate, toLocalDateKey } from '@/features/meals/dates';
 import { MedicineSetupSheet } from '@/features/medicines/MedicineSetupSheet';
-import { adherence, type DayMark, removeMedicine, useMedicines } from '@/features/medicines/medicineStore';
+import { type DayMark, type Medicine, removeMedicine, useAdherence, useMedicines } from '@/features/medicines/medicineStore';
 import { MealTimesEditor } from '@/features/onboarding/components/MealTimesEditor';
 import { targetsFor } from '@/features/onboarding/script';
 import { DEFAULT_MEAL_TIMES, type Profile } from '@/features/onboarding/types';
@@ -29,7 +29,8 @@ import { followupStatus } from './ReportResultScreen';
 
 const WEEK = 7;
 
-function Dots({ marks }: { marks: DayMark[] }) {
+function Dots({ medicine, days, today }: { medicine: Medicine; days: string[]; today: string }) {
+  const marks: DayMark[] = useAdherence(medicine, days, today);
   const taken = marks.filter(m => m === 'taken').length;
   const due = marks.filter(m => m !== 'none').length;
   return (
@@ -166,7 +167,7 @@ export function HealthScreen({ profile }: { profile: Profile }) {
                     {m.dose} · {m.frequency === 'daily' ? 'daily' : 'weekly'} at {formatTime(m.time)}
                   </Text>
                 </View>
-                <Dots marks={adherence(m, week, today)} />
+                <Dots medicine={m} days={week} today={today} />
               </Pressable>
             ))
           )}

@@ -4,6 +4,9 @@
     <!-- Photo and voice meal logging -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Medicine and meal reminders on time (granted at install on Android 13+).
+         Fine for a sideloaded APK; a Play Store build may need SCHEDULE_EXACT_ALARM instead. -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <!-- Camera is optional: typing a meal still works, so don't hide the app from camera-less devices -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 

@@ -32,6 +32,14 @@ A pure function, no React and no clock of its own, so every state of the Today s
 
 A skip counts as handled for the day; a snooze brings it back later. Urgency is shown by lightness, never colour: normal grey, overdue solid black.
 
+### Reminders when the app is closed
+
+Local notifications (`react-native-notify-kit`, the maintained fork of Notifee), scheduled on the phone with no server: each meal at your usual time unless already logged or skipped, each medicine at its time with **Taken** / **Snooze 30 min** buttons that work without opening the app, and "remind me in 2 days" report follow-ups. Which reminders should exist is a pure, tested function (`src/features/reminders/plan.ts`); every time a meal, dose or setting changes, the phone's list is replaced with the new plan, so a reminder for something already done never fires. Permission is asked once, after the first meal or medicine, never on first launch. No meal reminders when meal times "vary a lot".
+
+### Milestones
+
+Rare, earned moments from Mira in the conversation, never popups: 3 and 7 days of logging in a row (then every week, 30 and 90), a full week within 10% of the calorie target, and every dose of the day taken. Worked out from the logs, not stored (`src/features/today/milestones.ts`). Her greeting also mentions the current run ("Day 4 in a row.").
+
 ### Today is rebuilt, not stored
 
 The conversation isn't saved as chat history. It's rebuilt from what happened (meals, doses, skips, follow-up answers, each with its time) plus the engine's next message (`src/features/today/feed.ts`). Editing or deleting a meal can never leave a stale message behind.
@@ -120,6 +128,6 @@ cd ../server && npm test
 ## Known limitations
 
 - **Voice** uses the phone's speech recogniser; some phones need internet for it. The editable "heard" card is the safety net for wrong words.
-- **Medicine reminders are in-app:** Mira asks on Today at the right time; there are no push notifications yet.
+- **Reminders are planned two days ahead.** If the app isn't opened for longer than that, they stop until it is. On Android they may arrive a few minutes late (the phone batches alarms to save battery).
 - **Numbers are AI estimates.** The review card exists so you can correct them. Report reading is not medical advice.
 - **No restore after reinstall**, and a device id isn't login.

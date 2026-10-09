@@ -7,6 +7,7 @@ import { Text } from '@/components/Text';
 import { TimeStepper } from '@/components/TimeStepper';
 import { showToast } from '@/components/Toast';
 import { formatTime } from '@/engine/time';
+import { askForReminders } from '@/features/reminders/reminders';
 import { toLocalDateKey } from '@/features/meals/dates';
 import { colors, fonts, radius, spacing } from '@/theme';
 import { type Medicine, saveMedicine } from './medicineStore';
@@ -56,6 +57,7 @@ export function MedicineSetupSheet({
         : `${medicine.name} added`,
     );
     onSaved?.(medicine);
+    if (remind) askForReminders();
     onClose();
   };
 
@@ -83,7 +85,7 @@ export function MedicineSetupSheet({
         <View style={styles.toggle}>
           <View style={styles.flex}>
             <Text style={styles.toggleLabel}>Remind me</Text>
-            <Text style={styles.muted}>Mira asks on Today when it's due.</Text>
+            <Text style={styles.muted}>A notification at that time, with a Taken button.</Text>
           </View>
           <Switch
             value={remind}

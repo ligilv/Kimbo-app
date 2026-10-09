@@ -1811,6 +1811,51 @@ PODS:
     - ReactNativeDependencies
     - RNWorklets (>= 0.8.0)
     - Yoga
+  - RNNotifee (10.8.0):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-bridging
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - RNNotifee/NotifeeCore (= 10.8.0)
+    - Yoga
+  - RNNotifee/NotifeeCore (10.8.0):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-bridging
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - RNPermissions (5.6.2):
     - hermes-engine
     - RCTRequired
@@ -2192,6 +2237,7 @@ DEPENDENCIES:
   - ReactNativeDependencies (from `../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec`)
   - "ReactNativeSpeechToText (from `../node_modules/@dbkable/react-native-speech-to-text`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
+  - RNNotifee (from `../node_modules/react-native-notify-kit`)
   - RNPermissions (from `../node_modules/react-native-permissions`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
@@ -2386,6 +2432,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@dbkable/react-native-speech-to-text"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
+  RNNotifee:
+    :path: "../node_modules/react-native-notify-kit"
   RNPermissions:
     :path: "../node_modules/react-native-permissions"
   RNReanimated:
@@ -2493,6 +2541,7 @@ SPEC CHECKSUMS:
   ReactNativeDependencies: 94c922c39e0e6150ee9ad05e2ca1946e0ef55783
   ReactNativeSpeechToText: 8981c73cddab214d1c92c85a4768eed7b611b1dd
   RNGestureHandler: eb4c031b22e791851742d29384ddcad30f3ee49d
+  RNNotifee: 3361ff6fcfed104444c0cba901d00f0bd7d52584
   RNPermissions: 4722484d8d40a574daa2bb0263264fcd0325b4fc
   RNReanimated: 962c39a486cedec1b3bb97af4028c42aaa4d24a7
   RNScreens: 038dc998fe1ab34778d9e8f4a33318a6c7a5bde8

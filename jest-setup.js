@@ -35,6 +35,10 @@ jest.mock('@dbkable/react-native-speech-to-text', () => {
   };
 });
 
+jest.mock('react-native-notify-kit', () =>
+  require('react-native-notify-kit/jest-mock'),
+);
+
 // The document picker is a native module (and ships ESM).
 jest.mock('@react-native-documents/picker', () => ({
   pick: jest.fn(),
