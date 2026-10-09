@@ -3,7 +3,9 @@ import { launchCamera, launchImageLibrary, type ImagePickerResponse } from 'reac
 import { API_URL } from '@/config';
 import { type ExtractReportResponse, extractReportResponseSchema } from './schema';
 
-const TIMEOUT_MS = 60_000; // a multi-page PDF can take Gemini a while
+const TIMEOUT_MS = 90_000; // a big scanned PDF takes a while to upload and read
+// Same cap as the server (server/src/reports/report.schema.ts): ~15 MB file.
+const MAX_BASE64_LENGTH = 20 * 1024 * 1024;
 
 export type ReportFile = { base64: string; mimeType: 'image/jpeg' | 'image/png' | 'application/pdf'; name: string };
 export type PickResult = { kind: 'file'; file: ReportFile } | { kind: 'cancelled' } | { kind: 'error' };
@@ -54,10 +56,12 @@ export async function pickReportPdf(): Promise<PickResult> {
 
 export type ExtractResult =
   | { ok: true; data: ExtractReportResponse }
-  | { ok: false; reason: 'network' | 'timeout' | 'invalid' | 'too_big' };
+  | { ok: false; reason: 'network' | 'timeout' | 'invalid' | 'too_big' | 'unreadable' };
 
 // Never throws: every failure comes back as a reason the screen can explain.
 export async function extractReport(file: ReportFile, fetchImpl: typeof fetch = fetch): Promise<ExtractResult> {
+  // Checked here so a huge file fails at once instead of after a long upload.
+  if (file.base64.length > MAX_BASE64_LENGTH) return { ok: false, reason: 'too_big' };
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
@@ -67,7 +71,8 @@ export async function extractReport(file: ReportFile, fetchImpl: typeof fetch = 
       body: JSON.stringify({ file: { base64: file.base64, mimeType: file.mimeType } }),
       signal: controller.signal,
     });
-    if (res.status === 413 || res.status === 400) return { ok: false, reason: 'too_big' };
+    if (res.status === 413) return { ok: false, reason: 'too_big' };
+    if (res.status === 400) return { ok: false, reason: 'unreadable' };
     if (!res.ok) return { ok: false, reason: res.status >= 500 ? 'invalid' : 'network' };
     const parsed = extractReportResponseSchema.safeParse(await res.json());
     return parsed.success ? { ok: true, data: parsed.data } : { ok: false, reason: 'invalid' };
@@ -82,5 +87,6 @@ export const EXTRACT_ERRORS: Record<Exclude<ExtractResult, { ok: true }>['reason
   network: "I couldn't reach the server. Check your connection and try again.",
   timeout: 'That took too long to read. Try again, or send a clearer photo.',
   invalid: "I couldn't read that report. A sharper photo or the PDF usually works.",
-  too_big: "That file is too big for me. Try a photo of each page, or a smaller PDF.",
+  too_big: 'That file is over 15 MB, too big for me. Try a photo of each page instead.',
+  unreadable: "I couldn't open that file. Send a PDF, or a JPEG or PNG photo of the report.",
 };
