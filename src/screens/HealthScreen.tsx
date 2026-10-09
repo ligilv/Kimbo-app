@@ -182,7 +182,7 @@ export function HealthScreen({ profile }: { profile: Profile }) {
           ) : (
             <View style={styles.uploadRow}>
               <Button small variant="outline" label="Take a photo" onPress={() => send('camera')} />
-              <Button small variant="outline" label="Photo" onPress={() => send('gallery')} />
+              <Button small variant="outline" label="From gallery" onPress={() => send('gallery')} />
               <Button small variant="outline" label="PDF" onPress={() => send('pdf')} />
             </View>
           )}

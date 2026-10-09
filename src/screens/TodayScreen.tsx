@@ -57,7 +57,7 @@ export function TodayScreen({ profile }: { profile: Profile }) {
   // useToday re-renders every minute, so this rolls over at midnight.
   const viewing = date ?? toLocalDateKey(new Date());
   const state = useToday(profile, viewing);
-  const { now, today, isToday, totals, targets, feed, mealTimes } = state;
+  const { now, today, isToday, totals, targets, feed, mealTimes, later } = state;
   const editable = isEditableDay(viewing, today);
 
   const flow = useLogFlow(viewing, nearestSlot(mealTimes, now));
@@ -271,6 +271,17 @@ export function TodayScreen({ profile }: { profile: Profile }) {
             </Animated.View>
           ))}
 
+          {later.length > 0 && !flow.active && (
+            <View style={styles.later} accessible accessibilityLabel={`Later today: ${later.join(', ')}`}>
+              <Text style={styles.laterTitle}>Later today</Text>
+              {later.map(line => (
+                <Text key={line} style={styles.laterLine}>
+                  {line}
+                </Text>
+              ))}
+            </View>
+          )}
+
           {!isToday && editable && feed.every(i => i.kind === 'mira') && (
             <MiraBubble text={`Nothing logged ${isYesterday(viewing, now) ? 'yesterday' : 'that day'}. Missed a meal? Tell me below.`} />
           )}
@@ -455,8 +466,11 @@ const styles = themedStyles(() => ({
   barFill: { height: '100%', backgroundColor: colors.ink },
   soFarText: { fontSize: 13, fontFamily: fonts.semiBold },
   feed: { padding: spacing.lg, gap: 14 },
-  editLink: { color: colors.ground, textDecorationLine: 'underline', fontFamily: fonts.semiBold },
+  editLink: { color: colors.onReply, textDecorationLine: 'underline', fontFamily: fonts.semiBold },
   locked: { fontSize: 14, color: colors.muted, textAlign: 'center' },
+  later: { marginLeft: 36, paddingTop: spacing.sm, gap: 2 },
+  laterTitle: { fontSize: 12, fontFamily: fonts.bold, color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.5 },
+  laterLine: { fontSize: 14, color: colors.muted },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   photo: { alignSelf: 'flex-end', width: 200, height: 200, borderRadius: radius.lg, backgroundColor: colors.well },
   composer: {

@@ -33,7 +33,7 @@ export function WelcomeScreen() {
           <Text style={styles.subtitle}>
             {returning
               ? `${done} of ${total} questions done. Next: ${next.topic.toLowerCase()}.`
-              : 'Your health assistant. I keep track so you don’t have to.'}
+              : 'Your health assistant. I’ll tell you the one thing to do, when it’s time.'}
           </Text>
         </Animated.View>
         {!returning && (

@@ -35,7 +35,7 @@ export const SAMPLE_REPORT: ExtractReportResponse = {
       low: 30,
       high: 100,
       status: 'low',
-      note: 'Your vitamin D is lower than it should be, which is very common in India.',
+      note: 'Very common in India. Tiredness and aches are the usual signs.',
       why: [
         'Bone strength: helps you absorb calcium',
         'Immunity: helps fight infections',
@@ -54,7 +54,7 @@ export const SAMPLE_REPORT: ExtractReportResponse = {
       low: 211,
       high: 911,
       status: 'low',
-      note: 'Your vitamin B12 is a little low; it often is for people who eat mostly vegetarian food.',
+      note: 'A little low. Common on a mostly vegetarian diet.',
       why: [
         'Energy: helps make red blood cells',
         'Nerves: keeps them working well',

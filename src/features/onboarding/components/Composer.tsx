@@ -81,7 +81,7 @@ function ReportComposer({ onSubmit }: { onSubmit: (patch: Answers) => void }) {
       {state.kind === 'error' && <Text style={styles.hint}>{state.text}</Text>}
       <View style={styles.row}>
         <Button small variant="outline" label="Take a photo" onPress={() => send('camera')} style={styles.grow} />
-        <Button small variant="outline" label="Photo" onPress={() => send('gallery')} style={styles.grow} />
+        <Button small variant="outline" label="From gallery" onPress={() => send('gallery')} style={styles.grow} />
         <Button small variant="outline" label="PDF" onPress={() => send('pdf')} style={styles.grow} />
       </View>
       <Button small variant="ghost" label="Skip for now" onPress={() => onSubmit({ reportStep: 'skipped' })} />
@@ -111,8 +111,8 @@ function FinishCards({ answers, onFinish }: { answers: Answers; onFinish: () => 
             : 'Nothing to follow up. Add a new one from Health any time.',
         }
       : {
-          title: 'Your reports, when you have one',
-          body: "Add a blood report from Health and I'll tell you what needs attention.",
+          title: 'Blood reports: add one any time from Health',
+          body: "I'll read it and tell you, in plain words, what needs attention.",
         },
     {
       title: 'Short check-ins, at your times',

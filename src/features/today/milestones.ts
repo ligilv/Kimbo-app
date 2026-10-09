@@ -20,7 +20,7 @@ const isStreakMilestone = (n: number) => n === 3 || n === 30 || n === 90 || (n >
 
 function streakText(n: number) {
   if (n === 3) return "3 days in a row of logging. This is how habits start.";
-  if (n === 7) return 'A full week of logging, 7 days in a row. Most people stop by day 3.';
+  if (n === 7) return "Seven days straight. That's a full week of logging, nice.";
   if (n === 90) return '90 days in a row. This is just how you eat now.';
   return `${n} days in a row of logging. Keep it going.`;
 }

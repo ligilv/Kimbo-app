@@ -7,10 +7,13 @@ import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 import type { ReportValue } from './schema';
 
 // Foods that respect what the user eats: vegetarians never see chicken.
-export const foodsFor = (value: ReportValue, diet: Diet) =>
-  diet === 'nonveg' || diet === 'egg'
-    ? [...value.foods.nonveg, ...value.foods.veg].slice(0, 5)
-    : value.foods.veg;
+// Eggetarians get the egg items from the non-veg list, never meat or fish.
+export function foodsFor(value: ReportValue, diet: Diet): string[] {
+  if (diet === 'nonveg') return [...value.foods.nonveg, ...value.foods.veg].slice(0, 5);
+  if (diet === 'egg')
+    return [...value.foods.nonveg.filter(f => /\begg/i.test(f)), ...value.foods.veg].slice(0, 5);
+  return value.foods.veg;
+}
 
 // For "Not yet": why this value matters, what helps, and a later reminder.
 export function WhyItMattersSheet({

@@ -163,7 +163,7 @@ export const STEPS: Step[] = [
   {
     id: 'sex',
     topic: 'A few body basics',
-    mira: () => 'For the calorie maths I need a few body basics. Are you…',
+    mira: () => 'A few basics for the maths. Are you…',
     input: { kind: 'choice', field: 'sex', options: SEXES },
     isAnswered: a => a.sex !== undefined,
     reply: a => label(SEXES, a.sex),
@@ -218,7 +218,7 @@ export const STEPS: Step[] = [
     id: 'mealTimes',
     topic: 'Your meal times',
     mira: () =>
-      "When do you usually eat? I'll check in around these times, never before.",
+      "When do you usually eat? I'll check in around these times, not before.",
     input: { kind: 'mealTimes' },
     extra: true,
     isAnswered: a => a.mealTimes !== undefined,
@@ -228,7 +228,7 @@ export const STEPS: Step[] = [
     id: 'report',
     topic: 'A blood report (optional)',
     mira: () =>
-      "Last one, and it's optional. Got a recent blood report? Send a photo or PDF and I'll tell you, in plain words, what needs attention.",
+      "Last one, optional. Got a recent blood report? I'll read it and tell you what needs attention.",
     input: { kind: 'report' },
     extra: true,
     isAnswered: a => a.reportStep !== undefined,

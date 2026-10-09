@@ -90,7 +90,7 @@ export function MedicineSetupSheet({
         <View style={styles.toggle}>
           <View style={styles.flex}>
             <Text style={styles.toggleLabel}>Remind me</Text>
-            <Text style={styles.muted}>A notification at that time, with a Taken button.</Text>
+            <Text style={styles.muted}>Reminds you at that time. Taken and Snooze work from the lock screen.</Text>
           </View>
           <Switch
             value={remind}

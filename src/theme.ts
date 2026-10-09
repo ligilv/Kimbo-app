@@ -15,6 +15,8 @@ type Palette = {
   line: string; // outlines and dividers
   well: string; // Mira's bubbles, inputs, "soon" messages
   card: string; // filled cards that sit on the background (no outline)
+  reply: string; // your replies in the conversation
+  onReply: string; // text on them
   // Older names kept so shared components read naturally.
   primary: string;
   background: string;
@@ -33,6 +35,8 @@ const palettes: Record<Scheme, Palette> = {
     line: '#E2E2E2',
     well: '#ECECEC',
     card: '#FFFFFF', // white cards lift off the off-white, like Apple's Health
+    reply: '#1C1C1E',
+    onReply: '#FFFFFF',
     primary: '#1C1C1E',
     background: '#F7F7F7',
     surface: '#ECECEC',
@@ -45,6 +49,9 @@ const palettes: Record<Scheme, Palette> = {
     line: '#3D3D40',
     well: '#2E2E31', // a clear step lighter than the background
     card: '#28282B',
+    // Replies are mid-grey in dark, so Mira (and a late, white message) stays the loudest.
+    reply: '#48484C',
+    onReply: '#F2F2F2',
     primary: '#EDEDED',
     background: '#1C1C1E',
     surface: '#2E2E31',

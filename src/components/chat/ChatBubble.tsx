@@ -70,14 +70,14 @@ const styles = themedStyles(() => ({
   userBubble: {
     alignSelf: 'flex-end',
     maxWidth: '80%',
-    backgroundColor: colors.ink,
+    backgroundColor: colors.reply,
     borderBottomRightRadius: 6,
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.reply,
   },
   userBubbleEditing: { borderColor: colors.muted, borderStyle: 'dashed' },
   // No lineHeight: on Android a custom lineHeight in a bubble that sizes to its
   // text measured the line too narrow and cut off the last word.
-  userText: { fontSize: 16, fontFamily: fonts.regular, color: colors.ground },
+  userText: { fontSize: 16, fontFamily: fonts.regular, color: colors.onReply },
   pressed: { opacity: 0.85 },
 }));

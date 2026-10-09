@@ -14,14 +14,16 @@ import { storage } from '@/storage';
 
 export const DEMO_PROFILE: Profile = {
   name: 'Ligil',
-  goal: 'gain',
+  // Losing slowly on ~1,770 kcal, eggetarian: matches the meals below (dal,
+  // paneer, eggs) and the month of ~1,500 kcal days, so nothing contradicts.
+  goal: 'lose',
   sex: 'male',
   age: 25,
   heightCm: 168,
-  weightKg: 65,
-  targetWeightKg: 70,
-  activity: 'very',
-  diet: 'nonveg',
+  weightKg: 72,
+  targetWeightKg: 66,
+  activity: 'light',
+  diet: 'egg',
   heightUnit: 'ftin',
   weightUnit: 'kg',
   mealTimes: DEFAULT_MEAL_TIMES,

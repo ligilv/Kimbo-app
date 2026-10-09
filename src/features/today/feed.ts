@@ -1,13 +1,13 @@
 import type { Mood } from '@/components/Mascot';
-import type { NextAction } from '@/engine/nextAction';
-import { formatTime } from '@/engine/time';
+import { type NextAction, PROTEIN_FOODS } from '@/engine/nextAction';
+import { formatTime, minutesOf, toMinutes } from '@/engine/time';
 import type { DayState } from '@/features/day/dayState';
 import { type DateKey, formatShortDate, toLocalDateKey } from '@/features/meals/dates';
 import { formatKcal, SLOT_LABEL } from '@/features/meals/format';
 import { sumNutrients } from '@/features/meals/mealStore';
 import type { MealLog, MealSlot, Nutrients } from '@/features/meals/types';
 import type { Dose, Medicine } from '@/features/medicines/medicineStore';
-import type { MealTimes } from '@/features/onboarding/types';
+import type { Diet, MealTimes } from '@/features/onboarding/types';
 import type { Followup } from '@/features/reports/reportStore';
 import type { Milestone } from './milestones';
 
@@ -25,7 +25,7 @@ export type FeedInput = {
   isToday: boolean;
   now: Date;
   name: string;
-  mealTimes: MealTimes;
+  diet: Diet;
   logs: MealLog[];
   day: DayState;
   medicines: Medicine[]; // due on this date
@@ -50,29 +50,18 @@ const SKIP_TEXT = (key: string) => {
   return null; // dismissed nudges need no reply bubble
 };
 
+// Short on purpose: the day's schedule lives in the quiet "Later today" line.
 function greeting(now: Date, name: string) {
   const h = now.getHours();
-  const part = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  const part = h < 12 ? 'Morning' : h < 17 ? 'Afternoon' : 'Evening';
   return `${part}, ${name}.`;
 }
 
-function dayPlan(times: MealTimes, medicines: Medicine[]) {
-  const meals = [
-    `breakfast ~${formatTime(times.breakfast)}`,
-    `lunch ~${formatTime(times.lunch)}`,
-    `dinner ~${formatTime(times.dinner)}`,
-  ];
-  const meds = medicines.map(m => `${m.name} at ${formatTime(m.time)}`);
-  return `Today: ${[...meals, ...meds].join(', ')}.`;
-}
-
-const share = (part: number, whole: number) => {
-  const r = whole > 0 ? part / whole : 0;
-  if (r < 0.15) return 'a small part';
-  if (r < 0.3) return 'about a quarter';
-  if (r < 0.45) return 'about a third';
-  if (r < 0.65) return 'about half';
-  return 'most';
+const NEXT_MEAL: Record<MealSlot, string> = {
+  breakfast: 'at lunch',
+  lunch: 'at dinner',
+  snacks: 'at dinner',
+  dinner: 'later tonight',
 };
 
 export function mealSummary(log: MealLog) {
@@ -81,26 +70,37 @@ export function mealSummary(log: MealLog) {
   return `${list.charAt(0).toUpperCase()}${list.slice(1)} · ${formatKcal(sumNutrients(log.items).kcal)}`;
 }
 
-// One line after a meal: what it added, in words, against the day.
-export function mealReaction(meal: Nutrients, proteinTarget: number) {
-  const protein = Math.round(meal.protein);
-  return `${formatKcal(meal.kcal)}, ${protein} g protein. That's ${share(protein, proteinTarget)} of today's protein.`;
+// One line after a meal: what it added, what's left, and one food that closes
+// the gap (a number with no "then what" is just a log).
+export function mealReaction(
+  meal: Nutrients,
+  soFarProtein: number, // including this meal
+  proteinTarget: number,
+  slot: MealSlot,
+  diet: Diet,
+) {
+  const added = `${formatKcal(meal.kcal)}, ${Math.round(meal.protein)} g protein.`;
+  const left = Math.round(proteinTarget - soFarProtein);
+  if (left <= 5) return `${added} That covers today's protein. Nicely done.`;
+  return `${added} About ${left} g protein to go today: ${PROTEIN_FOODS[diet]} ${NEXT_MEAL[slot]} would help.`;
 }
 
 export function buildFeed(input: FeedInput): FeedItem[] {
   const items: FeedItem[] = [];
   const intro = input.isToday
-    ? [greeting(input.now, input.name), input.streakLine, dayPlan(input.mealTimes, input.medicines)].filter(
-        (line): line is string => !!line,
-      )
+    ? [greeting(input.now, input.name), input.streakLine].filter((line): line is string => !!line)
     : [`Here's ${formatShortDate(input.date)}.`];
-  if (input.isToday && input.flaggedSummary) intro.push(`From your report: ${input.flaggedSummary}.`);
+  if (input.isToday && input.flaggedSummary)
+    intro.push(`I've read your report: ${input.flaggedSummary}.`);
   items.push({ kind: 'mira', id: 'intro', text: intro.join(' ') });
 
   type Event = { at: string; items: FeedItem[] };
   const events: Event[] = [];
 
-  for (const log of input.logs) {
+  let soFar = 0;
+  for (const log of [...input.logs].sort((a, b) => a.createdAt.localeCompare(b.createdAt))) {
+    const meal = sumNutrients(log.items);
+    soFar += meal.protein;
     events.push({
       at: log.createdAt,
       items: [
@@ -108,7 +108,7 @@ export function buildFeed(input: FeedInput): FeedItem[] {
         {
           kind: 'mira',
           id: `react:${log.id}`,
-          text: mealReaction(sumNutrients(log.items), input.proteinTarget),
+          text: mealReaction(meal, soFar, input.proteinTarget, log.slot, input.diet),
         },
       ],
     });
@@ -133,7 +133,14 @@ export function buildFeed(input: FeedInput): FeedItem[] {
   }
   for (const f of input.followups) {
     if (f.answer && f.answeredAt && toLocalDateKey(new Date(f.answeredAt)) === input.date)
-      events.push({ at: f.answeredAt, items: [{ kind: 'reply', id: `fu:${f.id}`, text: ANSWER_TEXT[f.answer] }] });
+      // The question stays above its answer, so the reply never floats alone.
+      events.push({
+        at: f.answeredAt,
+        items: [
+          { kind: 'mira', id: `fuq:${f.id}`, text: `Your ${f.label} is ${f.status}. Have you seen a doctor about it?` },
+          { kind: 'reply', id: `fu:${f.id}`, text: ANSWER_TEXT[f.answer] },
+        ],
+      });
   }
 
   // Pushed last so a milestone earned with a meal lands just after that meal.
@@ -152,4 +159,27 @@ export function buildFeed(input: FeedInput): FeedItem[] {
     });
   }
   return items;
+}
+
+// The rest of today, quietly, under Mira's latest message: proof she knows the
+// schedule, without a six-line greeting. What's happening now is left out.
+export function laterToday(input: {
+  now: Date;
+  mealTimes: MealTimes;
+  loggedSlots: MealSlot[];
+  handled: string[];
+  medicines: Medicine[];
+  doses: Record<string, Dose>;
+  actionId?: string;
+}): string[] {
+  const now = minutesOf(input.now);
+  const meals = (['breakfast', 'lunch', 'snacks', 'dinner'] as MealSlot[])
+    .filter(slot => input.mealTimes[slot] !== undefined)
+    .filter(slot => !input.loggedSlots.includes(slot) && !input.handled.includes(`meal:${slot}`))
+    .filter(slot => `meal:${slot}` !== input.actionId && toMinutes(input.mealTimes[slot]!) > now)
+    .map(slot => ({ at: toMinutes(input.mealTimes[slot]!), text: `${SLOT_LABEL[slot]} around ${formatTime(input.mealTimes[slot]!)}` }));
+  const meds = input.medicines
+    .filter(m => !input.doses[m.id] && `med:${m.id}` !== input.actionId && toMinutes(m.time) > now)
+    .map(m => ({ at: toMinutes(m.time), text: `${m.name} at ${formatTime(m.time)}` }));
+  return [...meals, ...meds].sort((a, b) => a.at - b.at).map(x => x.text);
 }

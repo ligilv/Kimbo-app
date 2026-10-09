@@ -8,7 +8,7 @@ import { isDueOn, useDoses, useMedicines } from '@/features/medicines/medicineSt
 import { displayName, targetsFor } from '@/features/onboarding/script';
 import { DEFAULT_MEAL_TIMES, type Profile } from '@/features/onboarding/types';
 import { dueFollowups, flagged, latestReport, useFollowups, useReports } from '@/features/reports/reportStore';
-import { buildFeed } from './feed';
+import { buildFeed, laterToday } from './feed';
 import { milestonesFor, streakLine } from './milestones';
 
 // Re-renders once a minute so "late" and meal windows move with the clock.
@@ -74,7 +74,7 @@ export function useToday(profile: Profile, date: DateKey) {
     isToday,
     now,
     name: displayName(profile),
-    mealTimes,
+    diet: profile.diet,
     logs,
     day,
     medicines,
@@ -90,5 +90,17 @@ export function useToday(profile: Profile, date: DateKey) {
     action,
   });
 
-  return { now, today, isToday, logs, totals, targets, action, feed, mealTimes };
+  const later = isToday
+    ? laterToday({
+        now,
+        mealTimes,
+        loggedSlots: logs.map(l => l.slot),
+        handled: Object.keys(day.handled),
+        medicines,
+        doses,
+        actionId: action?.id,
+      })
+    : [];
+
+  return { now, today, isToday, logs, totals, targets, action, feed, mealTimes, later };
 }

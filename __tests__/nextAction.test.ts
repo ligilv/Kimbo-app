@@ -60,7 +60,7 @@ test('overdue medicine beats everything', () => {
 test('report follow-up comes before meals', () => {
   const a = nextAction(base({ now: at('08:30'), openFollowups: [{ id: 'f', label: 'Vitamin D', status: 'low' }] }));
   expect(a.type).toBe('report_followup');
-  expect(a.title).toBe('Your Vitamin D is low. Seen a doctor about it?');
+  expect(a.title).toBe('Your Vitamin D is low. Have you seen a doctor about it?');
   expect(a.dismiss?.intent).toEqual({ kind: 'followup', id: 'f', answer: 'not_yet' });
 });
 
@@ -83,7 +83,7 @@ test('evening protein nudge only when something is logged and it is short', () =
 
 test('all done says what is next, or tomorrow', () => {
   expect(nextAction(base({ now: at('10:30'), loggedSlots: ['breakfast'] })).title).toBe(
-    'All caught up. Next: lunch around 1:30 pm.',
+    "That's it till lunch. I'll check in around 1:30 pm.",
   );
   const night = nextAction(
     base({

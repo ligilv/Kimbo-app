@@ -175,8 +175,7 @@ export function nextAction(ctx: EngineContext): NextAction {
       id: `followup:${followup.id}`,
       type: 'report_followup',
       urgency: 'normal',
-      title: `Your ${followup.label} is ${followup.status}. Seen a doctor about it?`,
-      body: 'If you have a prescription, I can remind you to take it.',
+      title: `Your ${followup.label} is ${followup.status}. Have you seen a doctor about it?`,
       primary: {
         label: 'Yes, got a prescription',
         intent: { kind: 'followup', id: followup.id, answer: 'prescribed' },
@@ -285,8 +284,14 @@ export function nextAction(ctx: EngineContext): NextAction {
   const nextMeal = windows.find(w => now < w.start && w.slot !== 'snacks');
   const nextMed = meds.find(m => toMinutes(m.time) > now);
   const nextUp = [
-    nextMeal && { at: nextMeal.at, text: `${SLOT_NAME[nextMeal.slot].toLowerCase()} around ${formatTime(ctx.routine[nextMeal.slot]!)}` },
-    nextMed && { at: toMinutes(nextMed.time), text: `${nextMed.name} at ${formatTime(nextMed.time)}` },
+    nextMeal && {
+      at: nextMeal.at,
+      text: `That's it till ${SLOT_NAME[nextMeal.slot].toLowerCase()}. I'll check in around ${formatTime(ctx.routine[nextMeal.slot]!)}.`,
+    },
+    nextMed && {
+      at: toMinutes(nextMed.time),
+      text: `That's it till your ${nextMed.name} at ${formatTime(nextMed.time)}.`,
+    },
   ]
     .filter((x): x is { at: number; text: string } => !!x)
     .sort((a, b) => a.at - b.at)[0];
@@ -296,8 +301,7 @@ export function nextAction(ctx: EngineContext): NextAction {
       id: 'done:later',
       type: 'all_done',
       urgency: 'normal',
-      title: `All caught up. Next: ${nextUp.text}.`,
-      body: "I'll check in then.",
+      title: nextUp.text,
     };
   }
   const onTarget =

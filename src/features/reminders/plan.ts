@@ -80,7 +80,7 @@ export function planReminders(input: PlanInput): Reminder[] {
         id: `med:${date}:${med.id}`,
         at: snoozed ? new Date(snoozed).getTime() : at(date, med.time),
         title: `${med.name}, ${med.dose}`,
-        body: `Due at ${formatTime(med.time)}. Tap Taken once you've had it.`,
+        body: `Due now (${formatTime(med.time)}). Taken?`,
         kind: 'medicine',
         medicineId: med.id,
       });
