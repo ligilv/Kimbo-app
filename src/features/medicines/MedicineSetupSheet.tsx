@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Switch, TextInput, View } from 'react-native';
+import { Alert, Switch, TextInput, View } from 'react-native';
 import { BottomSheet } from '@/components/BottomSheet';
 import { Button } from '@/components/Button';
 import { Segmented } from '@/components/Segmented';
@@ -10,7 +10,7 @@ import { formatTime } from '@/engine/time';
 import { askForReminders } from '@/features/reminders/reminders';
 import { toLocalDateKey } from '@/features/meals/dates';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
-import { type Medicine, saveMedicine } from './medicineStore';
+import { type Medicine, removeMedicine, saveMedicine } from './medicineStore';
 
 export type MedicineDraft = { name?: string; forKey?: string; time: string };
 
@@ -22,39 +22,44 @@ const DURATIONS = [
 ];
 
 // One sheet: what, how much, when, how long. Saving it puts the dose on Today
-// at that time; nothing else to set up.
+// (and a reminder) at that time. Pass `existing` to edit a medicine instead:
+// it keeps its id and start date, so its dose history and dots stay.
 export function MedicineSetupSheet({
   draft,
+  existing,
   onClose,
   onSaved,
 }: {
-  draft: MedicineDraft;
+  draft?: MedicineDraft;
+  existing?: Medicine;
   onClose: () => void;
   onSaved?: (medicine: Medicine) => void;
 }) {
-  const [name, setName] = useState(draft.name ?? '');
-  const [dose, setDose] = useState('1 tablet');
-  const [time, setTime] = useState(draft.time);
-  const [frequency, setFrequency] = useState<'daily' | 'weekly'>('daily');
-  const [days, setDays] = useState(0);
-  const [remind, setRemind] = useState(true);
+  const [name, setName] = useState(existing?.name ?? draft?.name ?? '');
+  const [dose, setDose] = useState(existing?.dose ?? '1 tablet');
+  const [time, setTime] = useState(existing?.time ?? draft?.time ?? '20:30');
+  const [frequency, setFrequency] = useState<'daily' | 'weekly'>(existing?.frequency ?? 'daily');
+  const [days, setDays] = useState(existing?.days ?? 0);
+  const [remind, setRemind] = useState(existing?.remind ?? true);
   const valid = name.trim().length > 0 && dose.trim().length > 0;
 
   const save = () => {
     const medicine = saveMedicine({
+      id: existing?.id,
       name: name.trim(),
       dose: dose.trim(),
       time,
       frequency,
-      startDate: toLocalDateKey(new Date()),
+      startDate: existing?.startDate ?? toLocalDateKey(new Date()),
       days: days || undefined,
       remind,
-      forKey: draft.forKey,
+      forKey: existing?.forKey ?? draft?.forKey,
     });
+    const done = existing ? 'updated' : 'added';
     showToast(
       remind
-        ? `${medicine.name} added · I'll remind you at ${formatTime(time)}`
-        : `${medicine.name} added`,
+        ? `${medicine.name} ${done} · I'll remind you at ${formatTime(time)}`
+        : `${medicine.name} ${done}`,
     );
     onSaved?.(medicine);
     if (remind) askForReminders();
@@ -64,7 +69,7 @@ export function MedicineSetupSheet({
   return (
     <BottomSheet visible onClose={onClose}>
       <View style={styles.body}>
-        <Text style={styles.title}>Set up a medicine</Text>
+        <Text style={styles.title}>{existing ? 'Edit medicine' : 'Set up a medicine'}</Text>
         <Field label="Name">
           <TextInput value={name} onChangeText={setName} placeholder="e.g. Vitamin D3 60K" placeholderTextColor={colors.muted} style={styles.input} maxLength={60} />
         </Field>
@@ -95,7 +100,28 @@ export function MedicineSetupSheet({
             accessibilityLabel="Remind me"
           />
         </View>
-        <Button label="Save" onPress={save} disabled={!valid} />
+        <Button label={existing ? 'Save changes' : 'Save'} onPress={save} disabled={!valid} />
+        {existing && (
+          <Button
+            small
+            variant="ghost"
+            label="Stop this medicine"
+            onPress={() =>
+              Alert.alert(`Stop ${existing.name}?`, "It won't show up on Today or remind you any more.", [
+                { text: 'Keep', style: 'cancel' },
+                {
+                  text: 'Stop',
+                  style: 'destructive',
+                  onPress: () => {
+                    removeMedicine(existing.id);
+                    showToast(`${existing.name} stopped`);
+                    onClose();
+                  },
+                },
+              ])
+            }
+          />
+        )}
       </View>
     </BottomSheet>
   );

@@ -14,7 +14,7 @@ import { formatTime } from '@/engine/time';
 import { loadDemoAccount } from '@/features/demo/demoAccount';
 import { addDays, formatShortDate, toLocalDateKey } from '@/features/meals/dates';
 import { MedicineSetupSheet } from '@/features/medicines/MedicineSetupSheet';
-import { type DayMark, type Medicine, removeMedicine, useAdherence, useMedicines } from '@/features/medicines/medicineStore';
+import { type DayMark, type Medicine, useAdherence, useMedicines } from '@/features/medicines/medicineStore';
 import { MealTimesEditor } from '@/features/onboarding/components/MealTimesEditor';
 import { targetsFor } from '@/features/onboarding/script';
 import { DEFAULT_MEAL_TIMES, type Profile } from '@/features/onboarding/types';
@@ -65,6 +65,7 @@ export function HealthScreen({ profile }: { profile: Profile }) {
   const upload = useReportUpload();
   const appearance = useAppearance();
   const [sheet, setSheet] = useState<'plan' | 'settings' | 'times' | 'medicine' | null>(null);
+  const [editingMedicine, setEditingMedicine] = useState<Medicine | null>(null);
   const [deleting, setDeleting] = useState(false);
   const today = toLocalDateKey(new Date());
   const week = Array.from({ length: WEEK }, (_, i) => addDays(today, i - WEEK + 1));
@@ -155,14 +156,10 @@ export function HealthScreen({ profile }: { profile: Profile }) {
             medicines.map(m => (
               <Pressable
                 key={m.id}
-                onLongPress={() =>
-                  Alert.alert(`Stop ${m.name}?`, 'It will no longer show up on Today.', [
-                    { text: 'Keep', style: 'cancel' },
-                    { text: 'Stop', style: 'destructive', onPress: () => removeMedicine(m.id) },
-                  ])
-                }
-                accessibilityHint="Long press to stop this medicine"
-                style={styles.row}
+                onPress={() => setEditingMedicine(m)}
+                accessibilityRole="button"
+                accessibilityHint="Edit or stop this medicine"
+                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
               >
                 <View style={styles.flex}>
                   <Text style={styles.rowTitle}>{m.name}</Text>
@@ -228,6 +225,9 @@ export function HealthScreen({ profile }: { profile: Profile }) {
 
       {sheet === 'plan' && (
         <EditPlanSheet profile={profile} onSave={next => update(next)} onClose={() => setSheet(null)} />
+      )}
+      {editingMedicine && (
+        <MedicineSetupSheet existing={editingMedicine} onClose={() => setEditingMedicine(null)} />
       )}
       {sheet === 'medicine' && (
         <MedicineSetupSheet draft={{ time: (profile.mealTimes ?? DEFAULT_MEAL_TIMES).dinner }} onClose={() => setSheet(null)} />
