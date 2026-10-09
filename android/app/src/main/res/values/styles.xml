@@ -1,11 +1,10 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
-        <!-- Static Kimbo face on brand green until JS draws, so there is no empty gap before the
-             JS splash animation starts on top of it. -->
+        <!-- Light theme only. White + Mira's face until JS draws, so there's no blank gap. -->
         <item name="android:windowBackground">@drawable/splash_background</item>
     </style>
 

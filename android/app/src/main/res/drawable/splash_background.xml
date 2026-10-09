@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Window background while JS loads: brand green + the static Kimbo face, sized so it sits exactly
-     where the Android 12+ system splash icon and the first frame of the JS Lottie splash are. -->
+<!-- Window background while JS loads: white + Mira's face, where the Android 12+ system splash icon sits. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/ic_launcher_background" />
     <item

@@ -34,6 +34,8 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>UIUserInterfaceStyle</key>
+	<string>Light</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Mira uses your camera to log a meal from a photo of your plate.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
