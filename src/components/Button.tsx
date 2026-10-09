@@ -1,6 +1,6 @@
-import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, type StyleProp, type ViewStyle } from 'react-native';
 import { Text } from '@/components/Text';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 type Props = {
   label: string;
@@ -54,7 +54,7 @@ export function Button({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   base: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -77,4 +77,4 @@ const styles = StyleSheet.create({
   ghostLabel: { color: colors.muted },
   disabled: { opacity: 0.35 },
   pressed: { opacity: 0.75 },
-});
+}));

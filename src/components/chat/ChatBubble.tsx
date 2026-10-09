@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { type Mood, Mascot } from '@/components/Mascot';
 import { Text } from '@/components/Text';
-import { colors, fonts } from '@/theme';
+import { colors, fonts, themedStyles } from '@/theme';
 
 type MiraProps = {
   text: string;
@@ -55,7 +55,7 @@ export function UserBubble({ text, editing, onPress, trailing }: UserBubbleProps
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   miraRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   miraColumn: { flex: 1, alignItems: 'flex-start', gap: 10 },
   bubble: { paddingHorizontal: 16, paddingVertical: 12, borderRadius: 20 },
@@ -76,6 +76,8 @@ const styles = StyleSheet.create({
     borderColor: colors.ink,
   },
   userBubbleEditing: { borderColor: colors.muted, borderStyle: 'dashed' },
-  userText: { fontSize: 16, lineHeight: 22, fontFamily: fonts.regular, color: colors.ground },
+  // No lineHeight: on Android a custom lineHeight in a bubble that sizes to its
+  // text measured the line too narrow and cut off the last word.
+  userText: { fontSize: 16, fontFamily: fonts.regular, color: colors.ground },
   pressed: { opacity: 0.85 },
-});
+}));

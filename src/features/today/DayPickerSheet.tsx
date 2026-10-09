@@ -5,7 +5,7 @@ import { Text } from '@/components/Text';
 import { addDays, type DateKey, formatDayLabel } from '@/features/meals/dates';
 import { formatKcal } from '@/features/meals/format';
 import { getTotalsForDate } from '@/features/meals/mealStore';
-import { colors, fonts, spacing } from '@/theme';
+import { colors, fonts, spacing, themedStyles } from '@/theme';
 
 const DAYS = 14;
 
@@ -47,7 +47,7 @@ export function DayPickerSheet({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   title: { fontSize: 20, fontFamily: fonts.extraBold, marginBottom: spacing.sm },
   list: { maxHeight: 480 },
   row: {
@@ -61,4 +61,4 @@ const styles = StyleSheet.create({
   kcal: { fontSize: 14, color: colors.muted },
   check: { width: 32, alignItems: 'flex-end' },
   pressed: { opacity: 0.6 },
-});
+}));

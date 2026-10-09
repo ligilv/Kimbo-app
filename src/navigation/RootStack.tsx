@@ -1,5 +1,5 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createStaticNavigation, type StaticParamList } from '@react-navigation/native';
+import { createStaticNavigation, type NavigationState, type StaticParamList } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HeartPulse from 'lucide-react-native/icons/heart-pulse';
 import MessageCircle from 'lucide-react-native/icons/message-circle';
@@ -13,7 +13,7 @@ import { OnboardingScreen } from '@/screens/OnboardingScreen';
 import { ReportResultScreen } from '@/screens/ReportResultScreen';
 import { TodayScreen } from '@/screens/TodayScreen';
 import { WelcomeScreen } from '@/screens/WelcomeScreen';
-import { colors, fonts, navigationTheme } from '@/theme';
+import { colors, fonts, navigationThemeFor, type Scheme } from '@/theme';
 
 const useNeedsOnboarding = () => !useIsOnboarded();
 
@@ -30,7 +30,8 @@ const tabIcon =
     <Icon color={color} size={24} strokeWidth={focused ? 2.4 : 1.8} />;
 
 const MainTabs = createBottomTabNavigator({
-  screenOptions: {
+  // Functions, so the colours are read at render time (light or dark).
+  screenOptions: () => ({
     headerShown: false,
     tabBarHideOnKeyboard: true,
     tabBarActiveTintColor: colors.ink,
@@ -38,7 +39,7 @@ const MainTabs = createBottomTabNavigator({
     tabBarLabelStyle: { fontFamily: fonts.bold, fontSize: 12 },
     // Same white as the app, so the system bar area never shows a different colour.
     tabBarStyle: { backgroundColor: colors.ground, borderTopColor: colors.line },
-  },
+  }),
   screens: {
     Today: { screen: withProfile(TodayScreen), options: { tabBarIcon: tabIcon(MessageCircle) } },
     Health: { screen: withProfile(HealthScreen), options: { tabBarIcon: tabIcon(HeartPulse) } },
@@ -46,7 +47,7 @@ const MainTabs = createBottomTabNavigator({
 });
 
 const RootStack = createNativeStackNavigator({
-  screenOptions: { headerShown: false, contentStyle: { backgroundColor: colors.ground } },
+  screenOptions: () => ({ headerShown: false, contentStyle: { backgroundColor: colors.ground } }),
   screens: {
     Welcome: { if: useNeedsOnboarding, screen: WelcomeScreen },
     Onboarding: { if: useNeedsOnboarding, screen: OnboardingScreen },
@@ -57,8 +58,19 @@ const RootStack = createNativeStackNavigator({
 
 const StaticNavigation = createStaticNavigation(RootStack);
 
-export function Navigation() {
-  return <StaticNavigation theme={navigationTheme} />;
+// Kept across an appearance switch, so the app redraws on the same screen.
+let savedState: NavigationState | undefined;
+
+export function Navigation({ scheme }: { scheme: Scheme }) {
+  return (
+    <StaticNavigation
+      theme={navigationThemeFor(scheme)}
+      initialState={savedState}
+      onStateChange={state => {
+        savedState = state;
+      }}
+    />
+  );
 }
 
 type RootStackParamList = StaticParamList<typeof RootStack>;

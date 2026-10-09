@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { StyleSheet, Switch, View } from 'react-native';
+import { Switch, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { Text } from '@/components/Text';
 import { TimeStepper } from '@/components/TimeStepper';
-import { colors, fonts, spacing } from '@/theme';
+import { colors, fonts, spacing, themedStyles } from '@/theme';
 import { DEFAULT_MEAL_TIMES, type MealTimes } from '../types';
 
 const DEFAULT_SNACK = '17:00';
@@ -49,8 +49,8 @@ export function MealTimesEditor({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   stack: { gap: spacing.sm },
   snackRow: { flexDirection: 'row', alignItems: 'center', minHeight: 48, paddingHorizontal: 4 },
   snackLabel: { flex: 1, fontSize: 16, fontFamily: fonts.semiBold },
-});
+}));

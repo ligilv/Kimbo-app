@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, Switch, TextInput, View } from 'react-native';
+import { Switch, TextInput, View } from 'react-native';
 import { BottomSheet } from '@/components/BottomSheet';
 import { Button } from '@/components/Button';
 import { Segmented } from '@/components/Segmented';
@@ -9,7 +9,7 @@ import { showToast } from '@/components/Toast';
 import { formatTime } from '@/engine/time';
 import { askForReminders } from '@/features/reminders/reminders';
 import { toLocalDateKey } from '@/features/meals/dates';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 import { type Medicine, saveMedicine } from './medicineStore';
 
 export type MedicineDraft = { name?: string; forKey?: string; time: string };
@@ -110,7 +110,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   body: { gap: spacing.md, paddingBottom: spacing.sm },
   title: { fontSize: 20, fontFamily: fonts.extraBold },
   field: { gap: 4 },
@@ -129,4 +129,4 @@ const styles = StyleSheet.create({
   toggleLabel: { fontSize: 16, fontFamily: fonts.semiBold },
   muted: { fontSize: 13, color: colors.muted },
   flex: { flex: 1 },
-});
+}));

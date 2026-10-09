@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -9,7 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Mascot } from '@/components/Mascot';
-import { colors } from '@/theme';
+import { colors, themedStyles } from '@/theme';
 
 function Dot({ delay }: { delay: number }) {
   const lift = useSharedValue(0);
@@ -36,7 +36,7 @@ export function TypingIndicator() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   bubble: {
     flexDirection: 'row',
@@ -48,4 +48,4 @@ const styles = StyleSheet.create({
     backgroundColor: colors.well,
   },
   dot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: colors.ink, opacity: 0.6 },
-});
+}));

@@ -3,7 +3,7 @@ import ChevronDown from 'lucide-react-native/icons/chevron-down';
 import ChevronLeft from 'lucide-react-native/icons/chevron-left';
 import ChevronUp from 'lucide-react-native/icons/chevron-up';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '@/components/Text';
 import { formatShortDate, toLocalDateKey } from '@/features/meals/dates';
@@ -14,7 +14,7 @@ import { RangeBar } from '@/features/reports/RangeBar';
 import { flagged, type Followup, history, recheckOn, useFollowups, useReports } from '@/features/reports/reportStore';
 import type { ReportValue } from '@/features/reports/schema';
 import { foodsFor } from '@/features/reports/WhyItMattersSheet';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 type Props = StaticScreenProps<{ reportId: string }>;
 
@@ -116,7 +116,7 @@ export function ReportResultScreen({ route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   screen: { flex: 1, backgroundColor: colors.ground },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.sm, minHeight: 52 },
   back: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   body: { padding: spacing.lg, gap: spacing.md },
   title: { fontSize: 24, fontFamily: fonts.extraBold },
   lead: { fontSize: 16, color: colors.muted, marginTop: -spacing.sm },
-  value: { borderWidth: 1, borderColor: colors.line, borderRadius: radius.lg, padding: spacing.lg, gap: 4 },
+  value: { backgroundColor: colors.card, borderRadius: radius.lg, padding: spacing.lg, gap: 4 },
   valueHead: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm },
   valueLabel: { flex: 1, fontSize: 17, fontFamily: fonts.bold },
   valueNumber: { fontSize: 17, fontFamily: fonts.extraBold },
@@ -136,4 +136,4 @@ const styles = StyleSheet.create({
   toggle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 48 },
   toggleText: { fontSize: 16, fontFamily: fonts.semiBold },
   disclaimer: { fontSize: 13, color: colors.muted, lineHeight: 19, marginTop: spacing.md },
-});
+}));

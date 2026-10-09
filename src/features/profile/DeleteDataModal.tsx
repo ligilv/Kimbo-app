@@ -4,14 +4,13 @@ import {
   ActivityIndicator,
   Modal,
   Pressable,
-  StyleSheet,
   View,
 } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Text } from '@/components/Text';
 import { deleteServerData } from '@/features/sync/sync';
 import { storage } from '@/storage';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 const WHAT_GOES = [
   'Your profile and daily targets',
@@ -116,7 +115,7 @@ export function DeleteDataModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.45)',
@@ -156,4 +155,4 @@ const styles = StyleSheet.create({
   keepText: { fontSize: 16, fontFamily: fonts.bold, color: colors.primary },
   hidden: { opacity: 0 },
   pressed: { opacity: 0.8 },
-});
+}));

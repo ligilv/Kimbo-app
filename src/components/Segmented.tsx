@@ -1,6 +1,6 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { Text } from '@/components/Text';
-import { colors, fonts, radius } from '@/theme';
+import { colors, fonts, radius, themedStyles } from '@/theme';
 
 export function Segmented<T extends string | number>({
   options,
@@ -35,10 +35,10 @@ export function Segmented<T extends string | number>({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   wrap: { flexDirection: 'row', backgroundColor: colors.well, borderRadius: radius.md, padding: 3 },
   item: { flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: radius.sm, paddingHorizontal: 6 },
   itemOn: { backgroundColor: colors.ink },
   text: { fontSize: 14, fontFamily: fonts.semiBold },
   textOn: { color: colors.ground },
-});
+}));

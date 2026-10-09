@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { BottomSheet } from '@/components/BottomSheet';
 import { Button } from '@/components/Button';
 import { showToast } from '@/components/Toast';
 import { deleteLog, updateLog } from '@/features/meals/mealStore';
 import type { MealLog } from '@/features/meals/types';
-import { spacing } from '@/theme';
+import { spacing, themedStyles } from '@/theme';
 import { ReviewCard } from './FeedCards';
 import { type DraftRow, rowItem } from './useLogFlow';
 
@@ -49,4 +49,4 @@ export function MealEditSheet({ log, onClose }: { log: MealLog; onClose: () => v
   );
 }
 
-const styles = StyleSheet.create({ body: { gap: spacing.sm, paddingBottom: spacing.sm } });
+const styles = themedStyles(() => ({ body: { gap: spacing.sm, paddingBottom: spacing.sm } }));

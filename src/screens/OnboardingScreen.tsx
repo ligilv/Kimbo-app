@@ -5,7 +5,6 @@ import {
   Pressable,
   ScrollView,
   type ScrollViewInstance,
-  StyleSheet,
   View,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -24,7 +23,7 @@ import {
   useAnswers,
   useCompleteOnboarding,
 } from '@/features/onboarding/useOnboarding';
-import { colors, fonts } from '@/theme';
+import { colors, fonts, themedStyles } from '@/theme';
 
 const TYPING_MS = 900;
 
@@ -161,7 +160,7 @@ export function OnboardingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   screen: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
   header: {
@@ -195,4 +194,4 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semiBold,
     color: colors.primary,
   },
-});
+}));

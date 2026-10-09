@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import Check from 'lucide-react-native/icons/check';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
@@ -8,7 +8,7 @@ import { Mascot } from '@/components/Mascot';
 import { Text } from '@/components/Text';
 import { displayName, onboardingProgress } from '@/features/onboarding/script';
 import { useAnswers } from '@/features/onboarding/useOnboarding';
-import { colors, fonts, spacing } from '@/theme';
+import { colors, fonts, spacing, themedStyles } from '@/theme';
 
 const POINTS = [
   'Tells you the one thing to do now, at your meal times',
@@ -55,7 +55,7 @@ export function WelcomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   screen: { flex: 1, backgroundColor: colors.ground },
   content: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl, gap: spacing.xl },
   intro: { gap: spacing.sm, alignItems: 'center' },
@@ -66,4 +66,4 @@ const styles = StyleSheet.create({
   pointText: { flex: 1, fontSize: 16, lineHeight: 23 },
   footer: { paddingHorizontal: spacing.xl, paddingBottom: spacing.md, gap: spacing.sm },
   small: { fontSize: 13, color: colors.muted, textAlign: 'center' },
-});
+}));

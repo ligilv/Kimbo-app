@@ -1,8 +1,8 @@
 import { useEffect, useSyncExternalStore } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable } from 'react-native';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { Text } from '@/components/Text';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 type Toast = { id: number; text: string; action?: { label: string; onPress: () => void } };
 
@@ -62,7 +62,7 @@ export function ToastHost({ bottom }: { bottom: number }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   toast: {
     position: 'absolute',
     left: spacing.lg,
@@ -79,4 +79,4 @@ const styles = StyleSheet.create({
   text: { flex: 1, color: colors.ground, fontSize: 15, paddingVertical: spacing.md },
   action: { minHeight: 44, justifyContent: 'center', paddingHorizontal: spacing.md },
   actionText: { color: colors.ground, fontFamily: fonts.bold, fontSize: 15, textDecorationLine: 'underline' },
-});
+}));

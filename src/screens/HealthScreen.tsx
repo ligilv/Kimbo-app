@@ -1,9 +1,11 @@
 import { useNavigation } from '@react-navigation/native';
 import Settings from 'lucide-react-native/icons/settings';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomSheet } from '@/components/BottomSheet';
+import { Segmented } from '@/components/Segmented';
+import { type Appearance, changeAppearance, useAppearance } from '@/features/appearance/appearance';
 import { Button } from '@/components/Button';
 import { Text } from '@/components/Text';
 import { showToast } from '@/components/Toast';
@@ -23,7 +25,7 @@ import { flagged, latestReport, useFollowups, useReports } from '@/features/repo
 import { type UploadSource, useReportUpload } from '@/features/reports/useReportUpload';
 import { getDeviceId } from '@/features/sync/deviceId';
 import { readOutbox } from '@/features/sync/outbox';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 import { version } from '../../package.json';
 import { followupStatus } from './ReportResultScreen';
 
@@ -61,6 +63,7 @@ export function HealthScreen({ profile }: { profile: Profile }) {
   const followups = useFollowups();
   const medicines = useMedicines();
   const upload = useReportUpload();
+  const appearance = useAppearance();
   const [sheet, setSheet] = useState<'plan' | 'settings' | 'times' | 'medicine' | null>(null);
   const [deleting, setDeleting] = useState(false);
   const today = toLocalDateKey(new Date());
@@ -249,6 +252,22 @@ export function HealthScreen({ profile }: { profile: Profile }) {
         <BottomSheet visible onClose={() => setSheet(null)}>
           <View style={styles.sheetBody}>
             <Text style={styles.sheetTitle}>Settings</Text>
+            <Text style={styles.settingLabel}>Appearance</Text>
+            <Segmented<Appearance>
+              label="Appearance"
+              options={[
+                { value: 'light', label: 'Light' },
+                { value: 'dark', label: 'Dark' },
+                { value: 'system', label: 'Match phone' },
+              ]}
+              value={appearance}
+              onChange={next => {
+                // The sheet is its own window above the app: close it first so
+                // the switch animation covers the whole screen.
+                setSheet(null);
+                setTimeout(() => changeAppearance(next), 60);
+              }}
+            />
             <Button variant="outline" label="Meal times" onPress={() => setSheet('times')} />
             <Button variant="outline" label="Edit plan" onPress={() => setSheet('plan')} />
             <Button
@@ -270,7 +289,7 @@ export function HealthScreen({ profile }: { profile: Profile }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   screen: { flex: 1, backgroundColor: colors.ground },
   flex: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
@@ -287,8 +306,7 @@ const styles = StyleSheet.create({
     minHeight: 60,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.line,
+    backgroundColor: colors.card,
     borderRadius: radius.md,
   },
   rowTitle: { fontSize: 16, fontFamily: fonts.semiBold },
@@ -301,12 +319,13 @@ const styles = StyleSheet.create({
   dotNone: { borderColor: colors.line },
   uploadRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   reading: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 48 },
-  plan: { borderWidth: 1, borderColor: colors.line, borderRadius: radius.lg, padding: spacing.lg, gap: 6 },
+  plan: { backgroundColor: colors.card, borderRadius: radius.lg, padding: spacing.lg, gap: 6 },
   kcal: { fontSize: 22, fontFamily: fonts.extraBold },
   planWhy: { fontSize: 15, lineHeight: 22 },
   alignStart: { alignSelf: 'flex-start', marginTop: spacing.sm },
   sheetBody: { gap: spacing.sm, paddingBottom: spacing.sm },
+  settingLabel: { fontSize: 13, fontFamily: fonts.semiBold, color: colors.muted },
   sheetTitle: { fontSize: 20, fontFamily: fonts.extraBold, marginBottom: spacing.xs },
   version: { fontSize: 13, color: colors.muted, textAlign: 'center', paddingVertical: spacing.md },
   pressed: { opacity: 0.6 },
-});
+}));

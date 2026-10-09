@@ -21,7 +21,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, themedStyles } from '@/theme';
 
 const HIDDEN = Dimensions.get('window').height;
 const CLOSE_DISTANCE = 120;
@@ -112,11 +112,11 @@ export function BottomSheet({ visible, onClose, children }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   root: { flex: 1, justifyContent: 'flex-end' },
   backdrop: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(28, 43, 36, 0.45)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   sheet: {
     backgroundColor: colors.background,
@@ -130,6 +130,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 5,
     borderRadius: 3,
-    backgroundColor: 'rgba(28, 43, 36, 0.25)',
+    backgroundColor: colors.line,
   },
-});
+}));

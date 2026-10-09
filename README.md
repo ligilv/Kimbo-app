@@ -40,6 +40,10 @@ Local notifications (`react-native-notify-kit`, the maintained fork of Notifee),
 
 Rare, earned moments from Mira in the conversation, never popups: 3 and 7 days of logging in a row (then every week, 30 and 90), a full week within 10% of the calorie target, and every dose of the day taken. Worked out from the logs, not stored (`src/features/today/milestones.ts`). Her greeting also mentions the current run ("Day 4 in a row.").
 
+### Appearance
+
+Light by default (a health app shouldn't open dark), with Dark and Match phone in Health → Settings. Mira stays black and white in both: the dark palette is the same greys swapped, so the urgency rule still holds (a late message is the solid "ink" bubble: black in light mode, white in dark). Colours are read through `colors` / `themedStyles` in `src/theme.ts`; switching redraws the app on the same screen.
+
 ### Today is rebuilt, not stored
 
 The conversation isn't saved as chat history. It's rebuilt from what happened (meals, doses, skips, follow-up answers, each with its time) plus the engine's next message (`src/features/today/feed.ts`). Editing or deleting a meal can never leave a stale message behind.

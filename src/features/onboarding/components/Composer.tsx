@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, TextInput, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { Text } from '@/components/Text';
 import { formatTime } from '@/engine/time';
 import { flagged, getReports, latestReport } from '@/features/reports/reportStore';
 import { useReportUpload } from '@/features/reports/useReportUpload';
-import { colors, fonts } from '@/theme';
+import { colors, fonts, themedStyles } from '@/theme';
 import { isComplete, planReason, type Step, type StepInput, targetsFor } from '../script';
 import { type Answers, DEFAULT_MEAL_TIMES } from '../types';
 import { MealTimesEditor } from './MealTimesEditor';
@@ -526,7 +526,7 @@ function WeightComposer({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   stack: { gap: 10 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   pair: { flex: 1, flexDirection: 'row', gap: 8 },
@@ -624,12 +624,11 @@ const styles = StyleSheet.create({
   grow: { flex: 1, paddingHorizontal: 8 },
   reading: { minHeight: 48 },
   helpCard: {
-    borderWidth: 1,
-    borderColor: colors.line,
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 14,
     gap: 2,
   },
   helpTitle: { fontSize: 16, fontFamily: fonts.bold },
   pressed: { opacity: 0.8 },
-});
+}));

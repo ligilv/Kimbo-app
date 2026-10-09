@@ -2,14 +2,14 @@ import Minus from 'lucide-react-native/icons/minus';
 import Plus from 'lucide-react-native/icons/plus';
 import X from 'lucide-react-native/icons/x';
 import { useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, TextInput, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { Text } from '@/components/Text';
 import type { Chip, NextAction } from '@/engine/nextAction';
 import { formatKcal, formatQuantity, SLOT_LABEL } from '@/features/meals/format';
 import { sumNutrients } from '@/features/meals/mealStore';
 import { MEAL_SLOTS, type MealSlot } from '@/features/meals/types';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 import { type DraftRow, rowItem } from './useLogFlow';
 
 // Under each of Mira's prompts: one solid primary, the rest outlined, Skip last.
@@ -193,18 +193,16 @@ export function ReviewCard({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   flex: { flex: 1 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   row: { flexDirection: 'row', gap: spacing.sm },
   card: {
     alignSelf: 'stretch',
-    borderWidth: 1,
-    borderColor: colors.line,
+    backgroundColor: colors.card,
     borderRadius: radius.lg,
     padding: spacing.lg,
     gap: spacing.md,
-    backgroundColor: colors.ground,
   },
   cardLabel: { fontSize: 13, fontFamily: fonts.bold, color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.5 },
   heardInput: {
@@ -250,4 +248,4 @@ const styles = StyleSheet.create({
   slotOn: { backgroundColor: colors.ink, borderColor: colors.ink },
   slotText: { fontSize: 14, fontFamily: fonts.semiBold },
   slotTextOn: { color: colors.ground },
-});
+}));

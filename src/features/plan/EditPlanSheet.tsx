@@ -1,7 +1,7 @@
 import Minus from 'lucide-react-native/icons/minus';
 import Plus from 'lucide-react-native/icons/plus';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { BottomSheet } from '@/components/BottomSheet';
 import { Button } from '@/components/Button';
 import { Segmented } from '@/components/Segmented';
@@ -10,7 +10,7 @@ import { showToast } from '@/components/Toast';
 import { targetsFor } from '@/features/onboarding/script';
 import type { Activity, Goal, Profile } from '@/features/onboarding/types';
 import { formatHeight, formatWeight } from '@/features/onboarding/units';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 function Stepper({ label, text, onStep }: { label: string; text: string; onStep: (dir: 1 | -1) => void }) {
   return (
@@ -107,7 +107,7 @@ function fixTarget(p: Profile): Profile {
   return ok ? p : { ...p, targetWeightKg: p.weightKg + (p.goal === 'lose' ? -5 : 5) };
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   body: { gap: spacing.md, paddingBottom: spacing.sm },
   title: { fontSize: 20, fontFamily: fonts.extraBold },
   stepper: {
@@ -125,4 +125,4 @@ const styles = StyleSheet.create({
   result: { backgroundColor: colors.well, borderRadius: radius.md, padding: spacing.lg, gap: 2 },
   kcal: { fontSize: 22, fontFamily: fonts.extraBold },
   muted: { fontSize: 14, color: colors.muted },
-});
+}));

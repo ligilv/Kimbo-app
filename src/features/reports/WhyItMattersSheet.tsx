@@ -1,9 +1,9 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { BottomSheet } from '@/components/BottomSheet';
 import { Button } from '@/components/Button';
 import { Text } from '@/components/Text';
 import type { Diet } from '@/features/onboarding/types';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 import type { ReportValue } from './schema';
 
 // Foods that respect what the user eats: vegetarians never see chicken.
@@ -61,7 +61,7 @@ export function WhyItMattersSheet({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   body: { gap: spacing.md, paddingBottom: spacing.sm },
   title: { fontSize: 20, fontFamily: fonts.extraBold },
   muted: { fontSize: 15, color: colors.muted },
@@ -74,4 +74,4 @@ const styles = StyleSheet.create({
   food: { borderWidth: 1, borderColor: colors.line, borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 6 },
   foodText: { fontSize: 14 },
   note: { fontSize: 13, color: colors.muted },
-});
+}));

@@ -49,7 +49,7 @@ import { mealSummary } from '@/features/today/feed';
 import { MealEditSheet } from '@/features/today/MealEditSheet';
 import { useLogFlow } from '@/features/today/useLogFlow';
 import { useToday } from '@/features/today/useToday';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 export function TodayScreen({ profile }: { profile: Profile }) {
   const navigation = useNavigation();
@@ -424,7 +424,7 @@ export function TodayScreen({ profile }: { profile: Profile }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   screen: { flex: 1, backgroundColor: colors.ground },
   flex: { flex: 1 },
   header: {
@@ -492,4 +492,4 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     color: colors.ink,
   },
-});
+}));

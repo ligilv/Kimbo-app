@@ -1,5 +1,5 @@
-import { StyleSheet, View } from 'react-native';
-import { colors } from '@/theme';
+import { View } from 'react-native';
+import { colors, themedStyles } from '@/theme';
 
 // The usual range as a dark band on a light track, with a dot for your value.
 export function RangeBar({ value, low, high }: { value: number; low: number | null; high: number | null }) {
@@ -18,7 +18,7 @@ export function RangeBar({ value, low, high }: { value: number; low: number | nu
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() => ({
   track: { height: 8, borderRadius: 4, backgroundColor: colors.well, marginVertical: 6 },
   band: { position: 'absolute', top: 0, bottom: 0, backgroundColor: colors.line },
   dot: {
@@ -32,4 +32,4 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.ground,
   },
-});
+}));
