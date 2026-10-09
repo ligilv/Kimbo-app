@@ -15,7 +15,7 @@ type MiraProps = {
 export function MiraBubble({ text, inverted, mood = 'smile', children }: MiraProps) {
   return (
     <View style={styles.miraRow}>
-      <Mascot size={32} mood={mood} />
+      <Mascot size={28} mood={mood} />
       <View style={styles.miraColumn}>
         <View style={[styles.bubble, styles.miraBubble, inverted && styles.inverted]}>
           <Text style={[styles.miraText, inverted && styles.invertedText]}>{text}</Text>

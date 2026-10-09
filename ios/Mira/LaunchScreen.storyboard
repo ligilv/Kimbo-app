@@ -16,7 +16,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <!-- Static Mira face, same size and position as the first frame of the JS Lottie splash. -->
+                            <!-- The Mira mark (black ring, teal tip) centred on white while the app loads. -->
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" image="SplashFace" translatesAutoresizingMaskIntoConstraints="NO" id="Kmb-Fc-001">
                                 <rect key="frame" x="42.5" y="188.5" width="290" height="290"/>
                                 <constraints>
@@ -25,7 +25,7 @@
                                 </constraints>
                             </imageView>
                         </subviews>
-                        <!-- Brand green (#1F4D3A); the JS splash plays the Mira animation on top. -->
+                        <!-- White, same as the app. -->
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
                             <constraint firstItem="Kmb-Fc-001" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="Kmb-Fc-004"/>

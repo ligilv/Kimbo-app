@@ -26,7 +26,7 @@ function Dot({ delay }: { delay: number }) {
 export function TypingIndicator() {
   return (
     <View style={styles.row} accessible accessibilityLabel="Mira is typing" accessibilityLiveRegion="polite">
-      <Mascot size={32} />
+      <Mascot size={28} />
       <View style={styles.bubble}>
         <Dot delay={0} />
         <Dot delay={150} />

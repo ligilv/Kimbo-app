@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Window background while JS loads: white + Mira's face, where the Android 12+ system splash icon sits. -->
+<!-- Window background while JS loads: white + the Mira mark (black ring, teal tip). -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@color/ic_launcher_background" />
+    <item android:drawable="@color/splash_background" />
     <item
         android:width="290dp"
         android:height="290dp"
-        android:drawable="@drawable/ic_launcher_foreground"
+        android:drawable="@drawable/splash_mark"
         android:gravity="center" />
 </layer-list>

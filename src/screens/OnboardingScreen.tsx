@@ -58,7 +58,7 @@ export function OnboardingScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <Mascot size={36} />
+        <Mascot size={36} inverted />
         <View style={styles.flex}>
           <Text style={styles.headerName}>Mira</Text>
           <Text style={styles.headerSub}>

@@ -1,7 +1,8 @@
 import { DefaultTheme, type Theme } from '@react-navigation/native';
 
-// Black and white only, light theme only. Urgency is shown by lightness, never
-// by hue: normal = outlined, soon = grey well, overdue = solid black.
+// Black and white, light theme only. Urgency is shown by lightness, never by
+// hue: normal = outlined, soon = grey well, overdue = solid black. The only
+// colour in the app is the teal tip of Mira's ring (components/Mascot.tsx).
 // Contrast on white: ink 18.9:1, muted 5.3:1 (AA for body text).
 export const colors = {
   ink: '#111111', // text, primary buttons, overdue cards

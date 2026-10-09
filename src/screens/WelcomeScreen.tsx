@@ -25,7 +25,7 @@ export function WelcomeScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} bounces={false}>
-        <Mascot size={88} mood="grin" />
+        <Mascot size={112} mood="grin" />
         <Animated.View entering={FadeInDown.duration(400)} style={styles.intro}>
           <Text style={styles.title}>
             {returning ? `Welcome back, ${displayName(answers)}` : "Hi, I'm Mira"}
