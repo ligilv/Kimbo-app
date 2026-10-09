@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "Kimbo.app"
-               BlueprintName = "Kimbo"
-               ReferencedContainer = "container:Kimbo.xcodeproj">
+               BuildableName = "Mira.app"
+               BlueprintName = "Mira"
+               ReferencedContainer = "container:Mira.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "KimboTests.xctest"
-               BlueprintName = "KimboTests"
-               ReferencedContainer = "container:Kimbo.xcodeproj">
+               BuildableName = "MiraTests.xctest"
+               BlueprintName = "MiraTests"
+               ReferencedContainer = "container:Mira.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "Kimbo.app"
-            BlueprintName = "Kimbo"
-            ReferencedContainer = "container:Kimbo.xcodeproj">
+            BuildableName = "Mira.app"
+            BlueprintName = "Mira"
+            ReferencedContainer = "container:Mira.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "Kimbo.app"
-            BlueprintName = "Kimbo"
-            ReferencedContainer = "container:Kimbo.xcodeproj">
+            BuildableName = "Mira.app"
+            BlueprintName = "Mira"
+            ReferencedContainer = "container:Mira.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

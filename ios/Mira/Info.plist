@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Kimbo</string>
+	<string>Mira</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -35,13 +35,13 @@
 		<true/>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>Kimbo uses your camera to log a meal from a photo of your plate.</string>
+	<string>Mira uses your camera to log a meal from a photo of your plate.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Kimbo turns what you say into text so you can log a meal by voice.</string>
+	<string>Mira turns what you say into text so you can log a meal by voice.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Kimbo lets you pick a photo of your meal from your library to log it.</string>
+	<string>Mira lets you pick a photo of your meal from your library to log it.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Kimbo uses your microphone so you can log a meal by saying what you ate.</string>
+	<string>Mira uses your microphone so you can log a meal by saying what you ate.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string/>
 	<key>UILaunchStoryboardName</key>

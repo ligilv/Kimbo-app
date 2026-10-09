@@ -1,4 +1,4 @@
-package com.kimbo
+package com.mira
 
 import android.app.Application
 import com.facebook.react.PackageList
