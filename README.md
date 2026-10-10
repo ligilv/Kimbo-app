@@ -120,7 +120,7 @@ cp .env.example .env   # GEMINI_API_KEY, DATABASE_URL, DIRECT_URL; AI_PROVIDER=m
 npm run start:dev      # http://localhost:3000
 ```
 
-Debug builds talk to `http://10.0.2.2:3000` (your computer, from the Android emulator); release builds use **https://mira-api.onrender.com** (sleeps after 15 idle minutes; the app pings it on launch).
+Debug builds talk to `http://10.0.2.2:3000` (your computer, from the Android emulator); release builds use **https://kimbo-api.onrender.com** (sleeps after 15 idle minutes; the app pings it on launch).
 
 ## Tests
 

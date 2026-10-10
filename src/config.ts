@@ -18,7 +18,7 @@ export const API_URL = __DEV__
   ? Platform.OS === 'android'
     ? 'http://10.0.2.2:3000'
     : `http://${DEV_LAN_IP}:3000`
-  : 'https://mira-api.onrender.com';
+  : 'https://kimbo-api.onrender.com';
 
 // Send profile and meals to the server's database in the background. The phone
 // stays the main copy, so the app works the same when this is off or offline.
