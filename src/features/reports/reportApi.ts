@@ -1,5 +1,6 @@
 import { pick, types } from '@react-native-documents/picker';
 import { launchCamera, launchImageLibrary, type ImagePickerResponse } from 'react-native-image-picker';
+import { openPicker } from '@/features/logMeal/photo';
 import { API_URL } from '@/config';
 import { type ExtractReportResponse, extractReportResponseSchema } from './schema';
 
@@ -27,8 +28,9 @@ function fromImage(res: ImagePickerResponse): PickResult {
   };
 }
 
-export const photographReport = () => launchCamera({ ...PHOTO, cameraType: 'back', saveToPhotos: false }).then(fromImage);
-export const pickReportImage = () => launchImageLibrary({ ...PHOTO, selectionLimit: 1 }).then(fromImage);
+export const photographReport = () =>
+  openPicker(() => launchCamera({ ...PHOTO, cameraType: 'back', saveToPhotos: false })).then(fromImage);
+export const pickReportImage = () => openPicker(() => launchImageLibrary({ ...PHOTO, selectionLimit: 1 })).then(fromImage);
 
 // RN's fetch reads content:// and file:// uris, so the picked PDF needs no copy.
 const readBase64 = async (uri: string) => {

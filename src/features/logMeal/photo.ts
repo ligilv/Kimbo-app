@@ -6,7 +6,6 @@ import {
 } from 'react-native-image-picker';
 import type { MealPhoto } from './parseMeal';
 
-
 const OPTIONS: OptionsCommon = {
   mediaType: 'photo',
   maxWidth: 1024,
@@ -37,10 +36,25 @@ function toResult(res: ImagePickerResponse): PhotoResult {
   };
 }
 
+let pickerOpen = false;
+export async function openPicker(
+  launch: () => Promise<ImagePickerResponse>,
+): Promise<ImagePickerResponse> {
+  if (pickerOpen) return { didCancel: true };
+  pickerOpen = true;
+  try {
+    return await launch();
+  } finally {
+    pickerOpen = false;
+  }
+}
+
 export const takePhoto = () =>
-  launchCamera({ ...OPTIONS, cameraType: 'back', saveToPhotos: false }).then(
-    toResult,
-  );
+  openPicker(() =>
+    launchCamera({ ...OPTIONS, cameraType: 'back', saveToPhotos: false }),
+  ).then(toResult);
 
 export const pickPhoto = () =>
-  launchImageLibrary({ ...OPTIONS, selectionLimit: 1 }).then(toResult);
+  openPicker(() =>
+    launchImageLibrary({ ...OPTIONS, selectionLimit: 1 }),
+  ).then(toResult);
