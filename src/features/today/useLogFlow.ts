@@ -54,8 +54,10 @@ export function useLogFlow(date: DateKey, defaultSlot: MealSlot) {
   const [card, setCard] = useState<Card | null>(null);
   // The original description + question, so an answer is parsed with context.
   const pending = useRef<{ base: string; question: string; photo?: MealPhoto } | null>(null);
-  // While a review is open, new text adds to it instead of starting over.
-  const merging = useRef(false);
+  // Items already on the review card when "Add something" was tapped. Kept
+  // through "Mira heard", a portion question or an error until the new food
+  // comes back, so adding noodles never wipes the bread and jam.
+  const keep = useRef<Extract<Card, { kind: 'review' }> | null>(null);
   const busy = card?.kind === 'thinking';
 
   const say = (turn: NewTurn) => setTurns(t => [...t, { ...turn, id: newId() }]);
@@ -64,10 +66,10 @@ export function useLogFlow(date: DateKey, defaultSlot: MealSlot) {
     setTurns([]);
     setCard(null);
     pending.current = null;
-    merging.current = false;
+    keep.current = null;
   }, []);
 
-  const run = useCallback(async (input: ParseInput, keepRows: DraftRow[] = []) => {
+  const run = useCallback(async (input: ParseInput) => {
     setCard({ kind: 'thinking' });
     const result = await parseMeal(input);
     if (!result.ok) {
@@ -85,6 +87,7 @@ export function useLogFlow(date: DateKey, defaultSlot: MealSlot) {
       return;
     }
     pending.current = null;
+    const keepRows = keep.current?.rows ?? [];
     if (items.length === 0 && keepRows.length === 0) {
       setCard({ kind: 'failed', text: input.photo ? NO_FOOD_PHOTO : NO_FOOD, photo: !!input.photo });
       return;
@@ -94,6 +97,7 @@ export function useLogFlow(date: DateKey, defaultSlot: MealSlot) {
       ...items.map(item => ({ base: { ...item, id: newId() }, quantity: item.quantity })),
     ];
     const rawText = (input.text ?? '').split('\nAnswer to')[0] || 'Photo of my meal';
+    keep.current = null;
     setCard({ kind: 'review', rows, rawText });
   }, []);
 
@@ -101,15 +105,10 @@ export function useLogFlow(date: DateKey, defaultSlot: MealSlot) {
   const sendText = (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || busy) return;
+    refreshKeep();
     const mentioned = slotFromText(trimmed);
     if (mentioned) setSlot(mentioned);
-    if (merging.current && card?.kind === 'review') {
-      merging.current = false;
-      say({ kind: 'user', text: trimmed });
-      run({ text: trimmed }, card.rows);
-      return;
-    }
-    if (card?.kind !== 'clarify') setTurns([]);
+    if (card?.kind !== 'clarify' && !keep.current) setTurns([]);
     const followUp = card?.kind === 'clarify' ? pending.current : null;
     say({ kind: 'user', text: trimmed });
     run(
@@ -121,14 +120,29 @@ export function useLogFlow(date: DateKey, defaultSlot: MealSlot) {
 
   const sendPhoto = (photo: MealPhoto) => {
     if (busy) return;
-    reset();
+    refreshKeep();
+    if (!keep.current) reset();
     say({ kind: 'photo', uri: photo.uri });
     run({ photo });
   };
 
   const heard = (text: string) => {
-    setTurns([]);
+    refreshKeep();
+    if (!keep.current) setTurns([]);
     setCard({ kind: 'heard', text });
+  };
+
+  // Closing "Mira heard" (or recording again): back to the meal being added
+  // to, still in "add" mode, or to nothing.
+  const dismissHeard = () => {
+    if (card?.kind !== 'heard') return;
+    if (keep.current) setCard(keep.current);
+    else reset();
+  };
+
+  // The meal card may have been edited since "Add something"; keep the latest.
+  const refreshKeep = () => {
+    if (keep.current && card?.kind === 'review') keep.current = card;
   };
 
   const changeQuantity = (index: number, quantity: number) =>
@@ -138,7 +152,7 @@ export function useLogFlow(date: DateKey, defaultSlot: MealSlot) {
     setCard(c => (c?.kind === 'review' ? { ...c, rows: c.rows.filter((_, i) => i !== index) } : c));
 
   const addSomething = () => {
-    merging.current = true;
+    if (card?.kind === 'review') keep.current = card;
     say({ kind: 'mira', text: 'What else did you have?' });
   };
 
@@ -172,6 +186,7 @@ export function useLogFlow(date: DateKey, defaultSlot: MealSlot) {
     sendText,
     sendPhoto,
     heard,
+    dismissHeard,
     changeQuantity,
     removeRow,
     addSomething,

@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 import { colors, spacing, themedStyles } from '@/theme';
 
-const MAX_HEIGHT = 28;
+const MAX_HEIGHT = 56;
 
 // Live mic loudness while the user talks: newest bar on the right, ~10 per second.
 export function Waveform({ levels }: { levels: number[] }) {
@@ -14,7 +14,7 @@ export function Waveform({ levels }: { levels: number[] }) {
       {levels.map((level, i) => (
         <View
           key={i}
-          style={[styles.bar, { height: 3 + level * (MAX_HEIGHT - 3) }]}
+          style={[styles.bar, { height: 4 + level * (MAX_HEIGHT - 4) }]}
         />
       ))}
     </View>
@@ -27,8 +27,8 @@ const styles = themedStyles(() => ({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
+    gap: 4,
     backgroundColor: colors.ground,
   },
-  bar: { width: 4, borderRadius: 2, backgroundColor: colors.ink },
+  bar: { width: 5, borderRadius: 3, backgroundColor: colors.ink },
 }));

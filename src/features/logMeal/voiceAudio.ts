@@ -64,11 +64,16 @@ export function fromUtf8(buffer: ArrayBuffer): string {
   return out;
 }
 
-// 0..1 for the waveform bars. Speech is quiet in raw numbers (RMS ~0.02-0.2),
-// so it's scaled up and capped; silence stays near 0.
+// 0..1 for the waveform bars, on a decibel scale like the ear hears it:
+// -55 dB (room hum) shows as flat, -15 dB (talking close to the phone) fills
+// the bar. A straight scale left normal speech looking like nothing.
+const QUIET_DB = -55;
+const LOUD_DB = -15;
 export function loudness(samples: Float32Array): number {
   let sum = 0;
   for (const s of samples) sum += s * s;
   const rms = Math.sqrt(sum / (samples.length || 1));
-  return Math.min(1, rms * 6);
+  if (rms === 0) return 0;
+  const db = 20 * Math.log10(rms);
+  return Math.max(0, Math.min(1, (db - QUIET_DB) / (LOUD_DB - QUIET_DB)));
 }

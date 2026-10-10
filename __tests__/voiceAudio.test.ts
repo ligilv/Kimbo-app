@@ -17,7 +17,8 @@ test('PCM is 16-bit little-endian and clips out-of-range samples', () => {
   expect(toPcm16Base64(new Float32Array([1]))).toBe('/38=');
 });
 
-test('loudness is 0 for silence and capped at 1', () => {
+test('loudness is 0 for silence, capped at 1, and makes normal speech visible', () => {
+  expect(loudness(new Float32Array(100).fill(0.03))).toBeGreaterThan(0.5); // ~-30 dB, ordinary talking
   expect(loudness(new Float32Array(100))).toBe(0);
   expect(loudness(new Float32Array(100).fill(0.9))).toBe(1);
   expect(loudness(new Float32Array(0))).toBe(0);

@@ -200,7 +200,9 @@ class Session {
       this.finals = `${this.finals} ${content.inputTranscription.text}`.trim();
       this.interim = '';
       this.events.onText(this.text());
-      if (this.stopping) this.finishWith('heard');
+      // Gemini only finalises once the user has stopped talking, so this is
+      // the moment to show "Mira heard" without waiting for a tap on Stop.
+      this.finishWith('heard');
     }
     // Gemini noticed the user stopped talking: stop like the phone's own dictation does.
     if (msg.voiceActivity?.type === 'ACTIVITY_END' && this.text())

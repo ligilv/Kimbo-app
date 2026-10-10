@@ -61,16 +61,23 @@ export function HeardCard({
   text,
   onConfirm,
   onAgain,
+  onClose,
 }: {
   name: string;
   text: string;
   onConfirm: (text: string) => void;
   onAgain: () => void;
+  onClose: () => void;
 }) {
   const [value, setValue] = useState(text);
   return (
     <View style={styles.card}>
-      <Text style={styles.cardLabel}>{name} heard</Text>
+      <View style={styles.heardTop}>
+        <Text style={styles.cardLabel}>{name} heard</Text>
+        <Pressable onPress={onClose} hitSlop={12} accessibilityRole="button" accessibilityLabel="Discard what Mira heard">
+          <X size={18} color={colors.muted} />
+        </Pressable>
+      </View>
       <TextInput
         value={value}
         onChangeText={setValue}
@@ -204,6 +211,7 @@ const styles = themedStyles(() => ({
     padding: spacing.lg,
     gap: spacing.md,
   },
+  heardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardLabel: { fontSize: 13, fontFamily: fonts.bold, color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.5 },
   heardInput: {
     fontSize: 18,

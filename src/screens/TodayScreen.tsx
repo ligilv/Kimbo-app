@@ -117,6 +117,7 @@ export function TodayScreen({ profile }: { profile: Profile }) {
     }
     spoken.current = '';
     setDraft('');
+    flow.dismissHeard(); // a new recording replaces the old "Mira heard"
     speech.startListening();
   };
 
@@ -306,6 +307,7 @@ export function TodayScreen({ profile }: { profile: Profile }) {
               text={flow.card.text}
               onConfirm={text => flow.sendText(text)}
               onAgain={() => listen()}
+              onClose={flow.dismissHeard}
             />
           )}
           {flow.card?.kind === 'clarify' && (
