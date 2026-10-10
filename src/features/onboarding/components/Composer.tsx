@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, TextInput, View } from 'react-native';
 import { Button } from '@/components/Button';
+import { askForReminders } from '@/features/reminders/reminders';
 import { CyclingWords, THINKING_WORDS } from '@/components/chat/TypingIndicator';
 import { Text } from '@/components/Text';
 import { formatTime } from '@/engine/time';
@@ -55,7 +56,12 @@ export function Composer({ step, answers, onSubmit, onFinish }: Props) {
       return (
         <MealTimesEditor
           initial={answers.mealTimes}
-          onSave={mealTimes => onSubmit({ mealTimes })}
+          onSave={mealTimes => {
+            onSubmit({ mealTimes });
+            // "I'll check in around these times": the moment the permission
+            // makes sense. Not for "my times vary", which gets no meal reminders.
+            if (!mealTimes.varies) askForReminders();
+          }}
         />
       );
     case 'report':

@@ -173,7 +173,7 @@ export function useLogFlow(date: DateKey, defaultSlot: MealSlot) {
       { label: 'Undo', onPress: () => deleteLog(id) },
     );
     reset();
-    askForReminders(); // after the first meal: now reminders make sense
+    askForReminders(); // if onboarding didn't already ("my times vary"), after the first meal
   };
 
   return {
