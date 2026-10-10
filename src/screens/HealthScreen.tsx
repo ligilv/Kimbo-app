@@ -15,6 +15,8 @@ import { formatTime } from '@/engine/time';
 import { loadDemoAccount } from '@/features/demo/demoAccount';
 import { addDays, formatShortDate, toLocalDateKey } from '@/features/meals/dates';
 import { MedicineSetupSheet } from '@/features/medicines/MedicineSetupSheet';
+import { useFollowupAnswer } from '@/features/reports/useFollowupAnswer';
+import { FOLLOWUP_CHOICES, followupQuestion } from '@/engine/nextAction';
 import { type DayMark, type Medicine, useAdherence, useMedicines } from '@/features/medicines/medicineStore';
 import { MealTimesEditor } from '@/features/onboarding/components/MealTimesEditor';
 import { targetsFor } from '@/features/onboarding/script';
@@ -22,7 +24,7 @@ import { DEFAULT_MEAL_TIMES, type Profile } from '@/features/onboarding/types';
 import { useAnswers } from '@/features/onboarding/useOnboarding';
 import { EditPlanSheet } from '@/features/plan/EditPlanSheet';
 import { DeleteDataModal } from '@/features/profile/DeleteDataModal';
-import { flagged, latestReport, useFollowups, useReports } from '@/features/reports/reportStore';
+import { flagged, type Followup, latestReport, useFollowups, useReports } from '@/features/reports/reportStore';
 import { type UploadSource, useReportUpload } from '@/features/reports/useReportUpload';
 import { getDeviceId } from '@/features/sync/deviceId';
 import { readOutbox } from '@/features/sync/outbox';
@@ -68,6 +70,8 @@ export function HealthScreen({ profile }: { profile: Profile }) {
   const [sheet, setSheet] = useState<'plan' | 'settings' | 'times' | 'medicine' | null>(null);
   const [editingMedicine, setEditingMedicine] = useState<Medicine | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [asking, setAsking] = useState<Followup | null>(null);
+  const followup = useFollowupAnswer({ diet: profile.diet, dinnerTime: (profile.mealTimes ?? DEFAULT_MEAL_TIMES).dinner });
   const today = toLocalDateKey(new Date());
   const week = Array.from({ length: WEEK }, (_, i) => addDays(today, i - WEEK + 1));
   const targets = targetsFor(profile);
@@ -128,7 +132,10 @@ export function HealthScreen({ profile }: { profile: Profile }) {
               return (
                 <Pressable
                   key={v.key}
-                  onPress={() => navigation.navigate('ReportResult', { reportId: latest!.id })}
+                  // Not answered yet: ask here, the same question as on Today.
+                  onPress={() =>
+                    f?.state === 'open' ? setAsking(f) : navigation.navigate('ReportResult', { reportId: latest!.id })
+                  }
                   accessibilityRole="button"
                   style={({ pressed }) => [styles.row, pressed && styles.pressed]}
                 >
@@ -233,6 +240,27 @@ export function HealthScreen({ profile }: { profile: Profile }) {
       {editingMedicine && (
         <MedicineSetupSheet existing={editingMedicine} onClose={() => setEditingMedicine(null)} />
       )}
+      {asking && (
+        <BottomSheet visible onClose={() => setAsking(null)}>
+          <View style={styles.sheetBody}>
+            <Text style={styles.sheetTitle}>{followupQuestion(asking.label, asking.status)}</Text>
+            {(['prescribed', 'taking', 'not_yet'] as const).map((choice, i) => (
+              <Button
+                key={choice}
+                variant={i === 0 ? 'primary' : i === 1 ? 'outline' : 'ghost'}
+                label={FOLLOWUP_CHOICES[choice]}
+                onPress={() => {
+                  const f = asking;
+                  setAsking(null);
+                  // Let this sheet close before the next one opens.
+                  setTimeout(() => followup.answer(f, choice), 300);
+                }}
+              />
+            ))}
+          </View>
+        </BottomSheet>
+      )}
+      {followup.sheets}
       {sheet === 'medicine' && (
         <MedicineSetupSheet draft={{ time: (profile.mealTimes ?? DEFAULT_MEAL_TIMES).dinner }} onClose={() => setSheet(null)} />
       )}

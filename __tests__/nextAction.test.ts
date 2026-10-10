@@ -1,4 +1,5 @@
-import { type EngineContext, nearestSlot, nextAction } from '@/engine/nextAction';
+import { type EngineContext, nearestSlot, nextAction, slotsSoFar } from '@/engine/nextAction';
+import { slotFromText } from '@/features/meals/dates';
 
 const at = (hhmm: string) => {
   const [h, m] = hhmm.split(':').map(Number);
@@ -116,4 +117,25 @@ test('logging now goes to the closest usual meal', () => {
   expect(nearestSlot(routine, at('18:54'))).toBe('dinner');
   expect(nearestSlot(routine, at('10:30'))).toBe('breakfast');
   expect(nearestSlot({ ...routine, snacks: '17:00' }, at('16:30'))).toBe('snacks');
+});
+
+test('at lunch with no breakfast logged, Mira mentions it, and the example files under breakfast', () => {
+  const a = nextAction(base({ now: at('13:20') }));
+  expect(a).toMatchObject({ slot: 'lunch' });
+  expect(a.body).toContain('No breakfast logged today.');
+  expect(slotFromText('breakfast was poha')).toBe('breakfast');
+  // Logged or skipped breakfast: nothing to mention.
+  expect(nextAction(base({ now: at('13:20'), loggedSlots: ['breakfast'] })).body).not.toContain('breakfast');
+  expect(nextAction(base({ now: at('13:20'), dismissed: ['meal:breakfast'] })).body).not.toContain('breakfast');
+  // A brand-new user hasn't "missed" anything.
+  expect(nextAction(base({ now: at('13:20'), firstTime: true })).body).not.toContain('logged today');
+});
+
+test('meal buttons only offer meals whose time has come', () => {
+  const routine = { breakfast: '08:30', lunch: '13:30', dinner: '20:30' };
+  expect(slotsSoFar(routine, at('06:00'))).toEqual(['breakfast', 'snacks']);
+  expect(slotsSoFar(routine, at('11:27'))).toEqual(['breakfast', 'snacks']);
+  expect(slotsSoFar(routine, at('11:30'))).toEqual(['breakfast', 'lunch', 'snacks']); // 2 h before lunch
+  expect(slotsSoFar(routine, at('18:30'))).toEqual(['breakfast', 'lunch', 'snacks', 'dinner']); // early dinner
+  expect(nearestSlot(routine, at('11:27'))).toBe('breakfast'); // not lunch, yet
 });

@@ -23,7 +23,7 @@ import { MiraBubble, UserBubble } from '@/components/chat/ChatBubble';
 import { THINKING_WORDS, TypingIndicator } from '@/components/chat/TypingIndicator';
 import { Text } from '@/components/Text';
 import { showToast } from '@/components/Toast';
-import { type Chip, nearestSlot, type NextAction } from '@/engine/nextAction';
+import { type Chip, nearestSlot, type NextAction, slotsSoFar } from '@/engine/nextAction';
 import { markHandled, snooze } from '@/features/day/dayState';
 import { takePhoto, pickPhoto, type PhotoResult } from '@/features/logMeal/photo';
 import { useSpeech } from '@/features/logMeal/useSpeech';
@@ -36,14 +36,12 @@ import {
   toLocalDateKey,
 } from '@/features/meals/dates';
 import type { MealLog, MealSlot } from '@/features/meals/types';
-import { MedicineSetupSheet, type MedicineDraft } from '@/features/medicines/MedicineSetupSheet';
 import { getDoses, getMedicines, isDueOn, recordDose } from '@/features/medicines/medicineStore';
 import { tookMedicine } from '@/features/medicines/tookMedicine';
 import type { Profile } from '@/features/onboarding/types';
 import { requestCamera, requestVoice } from '@/features/permissions/mediaPermissions';
-import { answerFollowup, getFollowups, getReports, remindLater, updateFollowup } from '@/features/reports/reportStore';
-import type { ReportValue } from '@/features/reports/schema';
-import { WhyItMattersSheet } from '@/features/reports/WhyItMattersSheet';
+import { getFollowups } from '@/features/reports/reportStore';
+import { useFollowupAnswer } from '@/features/reports/useFollowupAnswer';
 import { DayPickerSheet } from '@/features/today/DayPickerSheet';
 import { ActionChips, HeardCard, OptionChips, ReviewCard } from '@/features/today/FeedCards';
 import { mealSummary } from '@/features/today/feed';
@@ -62,6 +60,7 @@ export function TodayScreen({ profile }: { profile: Profile }) {
   const editable = isEditableDay(viewing, today);
 
   const flow = useLogFlow(viewing, nearestSlot(mealTimes, now));
+  const followup = useFollowupAnswer({ diet: profile.diet, dinnerTime: mealTimes.dinner });
   // A new log (not an answer inside one) starts on the meal closest to now,
   // or the meal Mira just asked about.
   const startSlot = (slot?: MealSlot) => {
@@ -72,8 +71,6 @@ export function TodayScreen({ profile }: { profile: Profile }) {
   const [draft, setDraft] = useState('');
   const [picking, setPicking] = useState(false);
   const [editing, setEditing] = useState<MealLog | null>(null);
-  const [medicine, setMedicine] = useState<(MedicineDraft & { followupId?: string }) | null>(null);
-  const [why, setWhy] = useState<{ followupId: string; value: ReportValue } | null>(null);
   const scroll = useRef<ScrollViewInstance>(null);
   const input = useRef<TextInputInstance>(null);
 
@@ -175,17 +172,7 @@ export function TodayScreen({ profile }: { profile: Profile }) {
       case 'followup': {
         const f = getFollowups().find(x => x.id === intent.id);
         if (!f) return;
-        answerFollowup(f.id, intent.answer);
-        if (intent.answer === 'not_yet') {
-          const value = getReports()
-            .flatMap(r => r.values)
-            .reverse()
-            .find(v => v.key === f.key);
-          if (value) setWhy({ followupId: f.id, value });
-          return;
-        }
-        // Prescribed or already taking: set it up so Mira can remind.
-        return setMedicine({ name: f.label, forKey: f.key, time: mealTimes.dinner, followupId: f.id });
+        return followup.answer(f, intent.answer);
       }
     }
   };
@@ -340,6 +327,7 @@ export function TodayScreen({ profile }: { profile: Profile }) {
                 rows={flow.card.rows}
                 slot={flow.slot}
                 onSlot={flow.setSlot}
+                slots={isToday ? slotsSoFar(mealTimes, now) : undefined}
                 onChangeQuantity={flow.changeQuantity}
                 onRemove={flow.removeRow}
                 onAdd={() => {
@@ -413,30 +401,7 @@ export function TodayScreen({ profile }: { profile: Profile }) {
         />
       )}
       {editing && <MealEditSheet log={editing} onClose={() => setEditing(null)} />}
-      {medicine && (
-        <MedicineSetupSheet
-          draft={medicine}
-          onClose={() => setMedicine(null)}
-          onSaved={m => medicine.followupId && updateFollowup(medicine.followupId, { medicineId: m.id })}
-        />
-      )}
-      {why && (
-        <WhyItMattersSheet
-          value={why.value}
-          diet={profile.diet}
-          onClose={() => setWhy(null)}
-          onRemindLater={() => {
-            remindLater(why.followupId, 2);
-            showToast("Okay, I'll ask again in 2 days");
-            setWhy(null);
-          }}
-          onTaking={() => {
-            answerFollowup(why.followupId, 'taking');
-            setMedicine({ name: why.value.label, forKey: why.value.key, time: mealTimes.dinner, followupId: why.followupId });
-            setWhy(null);
-          }}
-        />
-      )}
+      {followup.sheets}
     </SafeAreaView>
   );
 }

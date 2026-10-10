@@ -101,6 +101,7 @@ export function ReviewCard({
   rows,
   slot,
   onSlot,
+  slots = MEAL_SLOTS,
   onChangeQuantity,
   onRemove,
   onAdd,
@@ -111,6 +112,7 @@ export function ReviewCard({
   rows: DraftRow[];
   slot: MealSlot;
   onSlot?: (slot: MealSlot) => void;
+  slots?: MealSlot[]; // which meal buttons to offer (default: all four)
   onChangeQuantity: (index: number, quantity: number) => void;
   onRemove: (index: number) => void;
   onAdd?: () => void;
@@ -177,7 +179,7 @@ export function ReviewCard({
       </View>
       {onSlot && (
         <View style={styles.slots}>
-          {MEAL_SLOTS.map(s => (
+          {MEAL_SLOTS.filter(s => s === slot || slots.includes(s)).map(s => (
             <Pressable
               key={s}
               onPress={() => onSlot(s)}

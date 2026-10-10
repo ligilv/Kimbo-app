@@ -132,12 +132,34 @@ function mealWindows(routine: Routine): Window[] {
 }
 
 // The meal someone logging "now" most likely means: the one whose usual time is closest.
+// Meals that can be logged so far today: dinner isn't offered at 11 am, but an
+// early dinner (2 h before the usual time) is. Snacks fit any time; the first
+// meal is always there, even at 6 am.
+const OFFER_BEFORE = 120;
+export function slotsSoFar(routine: Routine, now: Date): MealSlot[] {
+  const t = minutesOf(now);
+  return SLOT_ORDER.filter(
+    (s, i) => i === 0 || s === 'snacks' || routine[s] === undefined || toMinutes(routine[s]!) - OFFER_BEFORE <= t,
+  );
+}
+
 export function nearestSlot(routine: Routine, now: Date): MealSlot {
   const t = minutesOf(now);
-  return SLOT_ORDER.filter(s => routine[s] !== undefined).reduce((best, s) =>
+  // Closest of the meals that have come round (11:30 am is still breakfast, not lunch).
+  return slotsSoFar(routine, now).filter(s => routine[s] !== undefined).reduce((best, s) =>
     Math.abs(toMinutes(routine[s]!) - t) < Math.abs(toMinutes(routine[best]!) - t) ? s : best,
   'breakfast' as MealSlot);
 }
+
+// The report question and its answers: asked in the Today chat, and from a
+// tap on a flagged value in Health.
+export const followupQuestion = (label: string, status: 'low' | 'high') =>
+  `Your ${label} is ${status}. Have you seen a doctor about it?`;
+export const FOLLOWUP_CHOICES = {
+  prescribed: 'Yes, got a prescription',
+  taking: 'Already taking something',
+  not_yet: 'Not yet',
+} as const;
 
 export function nextAction(ctx: EngineContext): NextAction {
   const now = minutesOf(ctx.now);
@@ -175,21 +197,28 @@ export function nextAction(ctx: EngineContext): NextAction {
       id: `followup:${followup.id}`,
       type: 'report_followup',
       urgency: 'normal',
-      title: `Your ${followup.label} is ${followup.status}. Have you seen a doctor about it?`,
+      title: followupQuestion(followup.label, followup.status),
       primary: {
-        label: 'Yes, got a prescription',
+        label: FOLLOWUP_CHOICES.prescribed,
         intent: { kind: 'followup', id: followup.id, answer: 'prescribed' },
       },
       secondary: {
-        label: 'Already taking something',
+        label: FOLLOWUP_CHOICES.taking,
         intent: { kind: 'followup', id: followup.id, answer: 'taking' },
       },
       dismiss: {
-        label: 'Not yet',
+        label: FOLLOWUP_CHOICES.not_yet,
         intent: { kind: 'followup', id: followup.id, answer: 'not_yet' },
       },
     };
   }
+
+  // An earlier meal today with no log and no skip ("Breakfast wasn't logged").
+  // Said alongside the current meal; saying "breakfast was poha" files it there.
+  const missed = ctx.firstTime ? [] : windows.filter(w => w.slot !== 'snacks' && w.end <= now);
+  const missedNote = missed.length
+    ? ` No ${missed.map(w => SLOT_NAME[w.slot].toLowerCase()).join(' or ')} logged today. Had it? Tell me, like "${missed[0].slot} was poha".`
+    : '';
 
   // 3. A meal whose time has passed without a log or a skip.
   // (Not for a brand-new user: "late" means nothing before they have a habit.)
@@ -203,7 +232,7 @@ export function nextAction(ctx: EngineContext): NextAction {
       urgency: 'overdue',
       slot: late.slot,
       title: `${SLOT_NAME[late.slot]} · ${formatLate(now - late.at)} late`,
-      body: "Did you eat? Snap it or tell me. If you skipped it, that's fine too.",
+      body: `Did you eat? Snap it or tell me. If you skipped it, that's fine too.${missedNote}`,
       ...mealChips(late.slot),
     };
   }
@@ -221,7 +250,7 @@ export function nextAction(ctx: EngineContext): NextAction {
         : `${SLOT_NAME[open.slot]} time. What are you having?`,
       body: ctx.firstTime
         ? 'Snap your plate or just tell me. Nothing is saved until you check it.'
-        : `You usually eat around ${formatTime(ctx.routine[open.slot]!)}.`,
+        : `You usually eat around ${formatTime(ctx.routine[open.slot]!)}.${missedNote}`,
       ...mealChips(open.slot),
     };
   }
