@@ -532,6 +532,8 @@ const styles = themedStyles(() => ({
   pair: { flex: 1, flexDirection: 'row', gap: 8 },
   field: {
     backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.ink,
     borderRadius: 24,
     paddingHorizontal: 18,
     minHeight: 48,

@@ -207,6 +207,9 @@ const styles = themedStyles(() => ({
   card: {
     alignSelf: 'stretch',
     backgroundColor: colors.card,
+    // A white card on the off-white page was barely visible without an edge.
+    borderWidth: 1,
+    borderColor: colors.line,
     borderRadius: radius.lg,
     padding: spacing.lg,
     gap: spacing.md,
@@ -218,6 +221,8 @@ const styles = themedStyles(() => ({
     fontFamily: fonts.semiBold,
     color: colors.ink,
     backgroundColor: colors.well,
+    borderWidth: 1,
+    borderColor: colors.ink,
     borderRadius: radius.sm,
     padding: spacing.md,
     minHeight: 56,

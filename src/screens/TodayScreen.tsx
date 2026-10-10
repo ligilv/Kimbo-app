@@ -502,6 +502,9 @@ const styles = themedStyles(() => ({
     minHeight: 48,
     maxHeight: 120,
     backgroundColor: colors.well,
+    // Ink outline (dark in light mode, light in dark) so the box reads as "type here".
+    borderWidth: 1,
+    borderColor: colors.ink,
     borderRadius: radius.xl,
     paddingHorizontal: 18,
     paddingTop: 13,
