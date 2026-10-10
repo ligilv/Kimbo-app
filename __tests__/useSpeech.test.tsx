@@ -1,12 +1,85 @@
-import * as STT from '@dbkable/react-native-speech-to-text';
 import ReactTestRenderer from 'react-test-renderer';
 import { useSpeech } from '@/features/logMeal/useSpeech';
 
-type Listener = (arg?: unknown) => void;
-const listener = (fn: unknown) =>
-  (fn as jest.Mock).mock.calls.at(-1)![0] as Listener;
+// A fake mic: the test pushes audio with `mic.emit()`.
+const mic = {
+  onAudio: null as null | ((e: unknown) => void),
+  emit(level = 0.1) {
+    const data = new Float32Array(1600).fill(level);
+    mic.onAudio?.({
+      buffer: { sampleRate: 16_000, getChannelData: () => data },
+    });
+  },
+};
+jest.mock('react-native-audio-api', () => ({
+  AudioManager: {
+    setAudioSessionOptions: jest.fn(),
+    setAudioSessionActivity: jest.fn(() => Promise.resolve()),
+  },
+  AudioRecorder: jest.fn(() => {
+    let recording = false;
+    return {
+      onAudioReady: (_: unknown, cb: (e: unknown) => void) => {
+        mic.onAudio = cb;
+        return { status: 'success' };
+      },
+      clearOnAudioReady: () => {
+        mic.onAudio = null;
+      },
+      start: () => {
+        recording = true;
+        return Promise.resolve({ status: 'success' });
+      },
+      stop: () => {
+        recording = false;
+        return Promise.resolve({ status: 'success' });
+      },
+      isRecording: () => recording,
+    };
+  }),
+}));
 
-async function setup() {
+// A fake Gemini socket: the test plays server messages with `socket.reply()`.
+class FakeSocket {
+  static last: FakeSocket;
+  sent: Record<string, unknown>[] = [];
+  onopen: (() => void) | null = null;
+  onmessage: ((e: { data: ArrayBuffer }) => void) | null = null;
+  onerror: (() => void) | null = null;
+  onclose: (() => void) | null = null;
+  constructor(public url: string) {
+    FakeSocket.last = this;
+  }
+  send(raw: string) {
+    this.sent.push(JSON.parse(raw));
+  }
+  close() {}
+  // Gemini sends JSON as binary frames, like this.
+  reply(msg: object) {
+    const json = JSON.stringify(msg);
+    this.onmessage?.({
+      data: Uint8Array.from(json, c => c.charCodeAt(0)).buffer,
+    });
+  }
+}
+
+const flush = () =>
+  ReactTestRenderer.act(() => new Promise<void>(r => setImmediate(r)));
+
+async function setup(tokenOk = true) {
+  jest.useFakeTimers({ doNotFake: ['setImmediate'] });
+  globalThis.WebSocket = FakeSocket as unknown as typeof WebSocket;
+  globalThis.fetch = jest.fn(() =>
+    Promise.resolve({
+      ok: tokenOk,
+      status: tokenOk ? 200 : 502,
+      json: () =>
+        Promise.resolve({
+          token: 'auth_tokens/x',
+          model: 'gemini-3.5-transcribe-live',
+        }),
+    }),
+  ) as unknown as typeof fetch;
   const handlers = {
     onText: jest.fn(),
     onNothingHeard: jest.fn(),
@@ -17,96 +90,70 @@ async function setup() {
     api = useSpeech(handlers);
     return null;
   }
-  let tree!: ReactTestRenderer.ReactTestRenderer;
   await ReactTestRenderer.act(() => {
-    tree = ReactTestRenderer.create(<Probe />);
+    ReactTestRenderer.create(<Probe />);
   });
-  return {
-    handlers,
-    api: () => api,
-    emitResult: (transcript: string) =>
-      listener(STT.addSpeechResultListener)({
-        transcript,
-        isFinal: false,
-        confidence: 0.9,
-      }),
-    emitEnd: () => listener(STT.addSpeechEndListener)(),
-    emitError: (code: string) =>
-      listener(STT.addSpeechErrorListener)({ code, message: code }),
-    unmount: () => ReactTestRenderer.act(() => tree.unmount()),
-  };
+  await ReactTestRenderer.act(() => api.startListening());
+  await flush();
+  return { handlers, api: () => api };
 }
 
-beforeEach(() => {
-  jest.useFakeTimers();
-  jest.clearAllMocks();
-});
 afterEach(() => jest.useRealTimers());
 
-test('listens in en-IN and passes live words through', async () => {
-  const s = await setup();
-  await ReactTestRenderer.act(() => s.api().startListening());
-  expect(STT.start).toHaveBeenCalledWith({ language: 'en-IN' });
-  expect(s.api().listening).toBe(true);
-
-  await ReactTestRenderer.act(() => s.emitResult('two chapatis'));
-  await ReactTestRenderer.act(() => s.emitResult('two chapatis and dal'));
-  expect(s.handlers.onText.mock.calls.map(c => c[0])).toEqual([
-    'two chapatis',
-    'two chapatis and dal',
-  ]);
-
-  await ReactTestRenderer.act(() => s.emitEnd());
-  expect(s.api().listening).toBe(false);
-  expect(s.handlers.onNothingHeard).not.toHaveBeenCalled();
-  await s.unmount();
-});
-
-test('stops by itself and says so when nothing is heard for 6 seconds', async () => {
-  const s = await setup();
-  await ReactTestRenderer.act(() => s.api().startListening());
-  await ReactTestRenderer.act(() => {
-    jest.advanceTimersByTime(6_000);
-  });
-  expect(STT.stop).toHaveBeenCalled();
-  await ReactTestRenderer.act(() => s.emitEnd()); // the library sends "end" after stop
-  expect(s.handlers.onNothingHeard).not.toHaveBeenCalled(); // waits for late words first
-  await ReactTestRenderer.act(() => {
-    jest.advanceTimersByTime(1_000);
-  });
-  expect(s.handlers.onNothingHeard).toHaveBeenCalledTimes(1);
-  await s.unmount();
-});
-
-test('errors end listening and are reported', async () => {
-  const s = await setup();
-  await ReactTestRenderer.act(() => s.api().startListening());
-  await ReactTestRenderer.act(() => s.emitError('NETWORK_ERROR'));
-  expect(s.api().listening).toBe(false);
-  expect(s.handlers.onError).toHaveBeenCalledWith(
-    expect.objectContaining({ code: 'NETWORK_ERROR' }),
+test('streams the mic to Gemini and reports live then final words', async () => {
+  const { handlers, api } = await setup();
+  const ws = FakeSocket.last;
+  expect(ws.url).toContain(
+    'BidiGenerateContentConstrained?access_token=auth_tokens%2Fx',
   );
-  await s.unmount();
-});
 
-test('a failed start is reported instead of crashing', async () => {
-  (STT.start as jest.Mock).mockRejectedValueOnce(new Error('busy'));
-  const s = await setup();
-  await ReactTestRenderer.act(() => s.api().startListening());
-  expect(s.handlers.onError).toHaveBeenCalledWith('start-failed');
-  expect(s.api().listening).toBe(false);
-  await s.unmount();
-});
-
-test('words arriving just after "speech ended" are kept, with no "didn\u2019t catch that"', async () => {
-  const s = await setup();
-  await ReactTestRenderer.act(() => s.api().startListening());
-  await ReactTestRenderer.act(() => s.emitEnd()); // Android: end first...
-  await ReactTestRenderer.act(() => s.emitResult('idli')); // ...then the final words
-  await ReactTestRenderer.act(() => {
-    jest.advanceTimersByTime(2_000);
+  mic.emit(0.1); // recorded before Gemini is ready: held, not lost
+  ws.onopen?.();
+  expect(ws.sent[0]).toEqual({
+    setup: { model: 'models/gemini-3.5-transcribe-live' },
   });
-  expect(s.handlers.onText).toHaveBeenCalledWith('idli');
-  expect(s.handlers.onNothingHeard).not.toHaveBeenCalled();
-  await s.unmount();
+  await ReactTestRenderer.act(() => ws.reply({ setupComplete: {} }));
+  expect(ws.sent[1]).toHaveProperty(
+    'realtimeInput.audio.mimeType',
+    'audio/pcm;rate=16000',
+  );
+  expect(api().levels.at(-1)).toBeGreaterThan(0);
+
+  await ReactTestRenderer.act(() =>
+    ws.reply({
+      serverContent: { interimInputTranscription: { text: 'two roti' } },
+    }),
+  );
+  expect(handlers.onText).toHaveBeenLastCalledWith('two roti');
+
+  await ReactTestRenderer.act(() => api().stopListening());
+  expect(ws.sent.at(-1)).toEqual({ realtimeInput: { audioStreamEnd: true } });
+  expect(api().listening).toBe(true); // still waiting for the final words
+
+  await ReactTestRenderer.act(() =>
+    ws.reply({
+      serverContent: { inputTranscription: { text: 'Two roti and dal.' } },
+    }),
+  );
+  expect(handlers.onText).toHaveBeenLastCalledWith('Two roti and dal.');
+  expect(api().listening).toBe(false);
+  expect(handlers.onNothingHeard).not.toHaveBeenCalled();
+  expect(handlers.onError).not.toHaveBeenCalled();
+});
+
+test('stops by itself when nothing is said', async () => {
+  const { handlers, api } = await setup();
+  FakeSocket.last.onopen?.();
+  await ReactTestRenderer.act(() =>
+    FakeSocket.last.reply({ setupComplete: {} }),
+  );
+  await ReactTestRenderer.act(() => jest.advanceTimersByTime(6_000 + 2_500));
+  expect(handlers.onNothingHeard).toHaveBeenCalledTimes(1);
+  expect(api().listening).toBe(false);
+});
+
+test('says voice needs internet when the server gives no key', async () => {
+  const { handlers, api } = await setup(false);
+  expect(handlers.onError).toHaveBeenCalledWith('network');
+  expect(api().listening).toBe(false);
 });

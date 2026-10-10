@@ -38,8 +38,6 @@
 	<string>Light</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Mira uses your camera to log a meal from a photo of your plate.</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Mira turns what you say into text so you can log a meal by voice.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Mira lets you pick a photo of your meal from your library to log it.</string>
 	<key>NSMicrophoneUsageDescription</key>

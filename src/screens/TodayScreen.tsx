@@ -27,6 +27,7 @@ import { type Chip, nearestSlot, type NextAction } from '@/engine/nextAction';
 import { markHandled, snooze } from '@/features/day/dayState';
 import { takePhoto, pickPhoto, type PhotoResult } from '@/features/logMeal/photo';
 import { useSpeech } from '@/features/logMeal/useSpeech';
+import { Waveform } from '@/features/logMeal/Waveform';
 import {
   type DateKey,
   formatShortDate,
@@ -88,7 +89,7 @@ export function TodayScreen({ profile }: { profile: Profile }) {
       flow.say({
         kind: 'mira',
         text:
-          error !== 'start-failed' && error.code === 'NETWORK_ERROR'
+          error === 'network'
             ? 'Voice needs internet right now. Type it instead?'
             : "Voice isn't working right now. Type it instead?",
       }),
@@ -348,6 +349,7 @@ export function TodayScreen({ profile }: { profile: Profile }) {
           )}
         </ScrollView>
 
+        {editable && speech.listening && <Waveform levels={speech.levels} />}
         {editable && (
           <View style={styles.composer}>
             <Pressable

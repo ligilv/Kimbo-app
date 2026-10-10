@@ -21,19 +21,10 @@ jest.mock('react-native-permissions', () =>
   require('react-native-permissions/mock'),
 );
 
-// Native speech recognition doesn't exist in Jest.
-jest.mock('@dbkable/react-native-speech-to-text', () => {
-  const subscription = { remove: () => {} };
-  return {
-    start: jest.fn(() => Promise.resolve()),
-    stop: jest.fn(() => Promise.resolve()),
-    isAvailable: jest.fn(() => Promise.resolve(true)),
-    requestPermissions: jest.fn(() => Promise.resolve(true)),
-    addSpeechResultListener: jest.fn(() => subscription),
-    addSpeechErrorListener: jest.fn(() => subscription),
-    addSpeechEndListener: jest.fn(() => subscription),
-  };
-});
+// The mic library is native; its own mock stands in (useSpeech.test has a finer one).
+jest.mock('react-native-audio-api', () =>
+  require('react-native-audio-api/mock'),
+);
 
 jest.mock('react-native-notify-kit', () =>
   require('react-native-notify-kit/jest-mock'),

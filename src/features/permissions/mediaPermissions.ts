@@ -1,7 +1,3 @@
-import {
-  isAvailable as speechAvailable,
-  requestPermissions as requestSpeechPermissions,
-} from '@dbkable/react-native-speech-to-text';
 import { Platform } from 'react-native';
 import {
   PERMISSIONS,
@@ -13,6 +9,11 @@ import {
 const CAMERA = Platform.select({
   ios: PERMISSIONS.IOS.CAMERA,
   default: PERMISSIONS.ANDROID.CAMERA,
+});
+
+const MICROPHONE = Platform.select({
+  ios: PERMISSIONS.IOS.MICROPHONE,
+  default: PERMISSIONS.ANDROID.RECORD_AUDIO,
 });
 
 const isGranted = (status: PermissionStatus) =>
@@ -27,12 +28,11 @@ export async function requestCamera(): Promise<boolean> {
 
 export type VoiceAccess = 'ok' | 'unavailable' | 'denied';
 
-// Asked at the moment "Say it" is tapped. Covers the microphone (and speech
-// recognition on iOS), plus whether the phone has a speech recogniser at all.
+// Asked at the moment "Say it" is tapped. Speech is turned into text by Gemini
+// (see useSpeech), so only the microphone is needed.
 export async function requestVoice(): Promise<VoiceAccess> {
   try {
-    if (!(await speechAvailable())) return 'unavailable';
-    return (await requestSpeechPermissions()) ? 'ok' : 'denied';
+    return isGranted(await request(MICROPHONE)) ? 'ok' : 'denied';
   } catch {
     return 'unavailable';
   }
