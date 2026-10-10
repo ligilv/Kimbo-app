@@ -33,6 +33,7 @@ export type FeedInput = {
   followups: Followup[];
   flaggedSummary?: string; // "3 of 24 values need attention"
   streakLine?: string; // "Day 4 in a row."
+  fact?: string; // today's tip, under the greeting
   milestones?: Milestone[]; // placed at the moment they were earned
   proteinTarget: number;
   action?: NextAction; // today only
@@ -93,6 +94,7 @@ export function buildFeed(input: FeedInput): FeedItem[] {
   if (input.isToday && input.flaggedSummary)
     intro.push(`I've read your report: ${input.flaggedSummary}.`);
   items.push({ kind: 'mira', id: 'intro', text: intro.join(' ') });
+  if (input.fact) items.push({ kind: 'mira', id: 'fact', text: input.fact });
 
   type Event = { at: string; items: FeedItem[] };
   const events: Event[] = [];

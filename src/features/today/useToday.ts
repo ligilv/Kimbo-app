@@ -9,6 +9,7 @@ import { displayName, targetsFor } from '@/features/onboarding/script';
 import { DEFAULT_MEAL_TIMES, type Profile } from '@/features/onboarding/types';
 import { dueFollowups, flagged, latestReport, useFollowups, useReports } from '@/features/reports/reportStore';
 import { buildFeed, laterToday } from './feed';
+import { factOfTheDay } from './facts';
 import { milestonesFor, streakLine } from './milestones';
 
 // Re-renders once a minute so "late" and meal windows move with the clock.
@@ -86,6 +87,7 @@ export function useToday(profile: Profile, date: DateKey) {
         : undefined,
     proteinTarget: targets.proteinG,
     streakLine: isToday ? streakLine(today, hasMeals) : undefined,
+    fact: isToday ? factOfTheDay(today, profile.goal, profile.diet) : undefined,
     milestones,
     action,
   });

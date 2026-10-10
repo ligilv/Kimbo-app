@@ -8,7 +8,9 @@ import {
   pickReportPdf,
   type PickResult,
 } from './reportApi';
-import { addReport, type Report } from './reportStore';
+import { showToast } from '@/components/Toast';
+import { formatShortDate } from '@/features/meals/dates';
+import { addReport, findSameReport, type Report } from './reportStore';
 
 export type UploadSource = 'camera' | 'gallery' | 'pdf';
 type State = { kind: 'idle' } | { kind: 'reading' } | { kind: 'error'; text: string };
@@ -45,6 +47,11 @@ export function useReportUpload() {
       return null;
     }
     setState({ kind: 'idle' });
+    const same = findSameReport(result.data);
+    if (same) {
+      showToast(`You've already added this report (${formatShortDate(same.takenOn)})`);
+      return same;
+    }
     return addReport(result.data);
   };
 

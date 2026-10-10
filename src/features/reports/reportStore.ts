@@ -40,8 +40,20 @@ export const latestReport = (reports: Report[]) =>
 
 export const flagged = (report: Report) => report.values.filter(v => v.status !== 'normal');
 
-// Saves the report and opens a follow-up for each flagged value that doesn't
-// already have one (a re-test of the same value updates nothing twice).
+// The same report uploaded again (same results, same printed date): the one
+// already saved, so it isn't listed twice or counted twice in trends.
+export function findSameReport(data: ExtractReportResponse, reports = getReports()): Report | undefined {
+  const fingerprint = (values: ReportValue[]) =>
+    values.map(v => `${v.key}=${v.value}`).sort().join('|');
+  const target = fingerprint(data.values);
+  return reports.find(r => (!data.takenOn || r.takenOn === data.takenOn) && fingerprint(r.values) === target);
+}
+
+// Saves the report. Questions only follow the newest report (by printed date):
+// - a flagged value with no question yet opens one (a re-test doesn't ask twice);
+// - an unanswered question whose value is now normal is dropped, so Mira never
+//   asks "your B12 is low" after a re-test says it's fine.
+// An older report uploaded later just joins the history.
 export function addReport(data: ExtractReportResponse, now = new Date()): Report {
   const report: Report = {
     id: newId(),
@@ -49,11 +61,15 @@ export function addReport(data: ExtractReportResponse, now = new Date()): Report
     uploadedAt: now.toISOString(),
     values: data.values,
   };
-  writeJson(REPORTS, [...getReports(), report]);
-  const existing = getFollowups();
-  const open = new Set(existing.map(f => f.key));
+  const reports = [...getReports(), report];
+  writeJson(REPORTS, reports);
+  if (latestReport(reports) !== report) return report;
+
+  const nowNormal = new Set(report.values.filter(v => v.status === 'normal').map(v => v.key));
+  const existing = getFollowups().filter(f => !(f.state === 'open' && nowNormal.has(f.key)));
+  const asked = new Set(existing.map(f => f.key));
   const added = flagged(report)
-    .filter(v => !open.has(v.key))
+    .filter(v => !asked.has(v.key))
     .map<Followup>(v => ({
       id: newId(),
       reportId: report.id,
