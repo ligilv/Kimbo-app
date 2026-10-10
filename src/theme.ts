@@ -59,7 +59,7 @@ const palettes: Record<Scheme, Palette> = {
   },
 };
 
-let scheme: Scheme = 'light';
+let scheme: Scheme = 'dark';
 export const getScheme = () => scheme;
 export const paletteFor = (s: Scheme) => palettes[s];
 // Set by the app root before it renders; screens then redraw with these colours.

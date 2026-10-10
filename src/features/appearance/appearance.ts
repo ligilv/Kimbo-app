@@ -6,10 +6,10 @@ export type Appearance = 'light' | 'dark';
 
 const KEY = 'appearance';
 
-// Light unless the user picks Dark. (An old saved 'system' also reads as light.)
+// Dark unless the user picks Light. (An old saved 'system' also reads as dark.)
 export function useAppearance(): Appearance {
   const [value] = useMMKVString(KEY, storage);
-  return value === 'dark' ? 'dark' : 'light';
+  return value === 'light' ? 'light' : 'dark';
 }
 
 export const useScheme = (): Scheme => useAppearance();
