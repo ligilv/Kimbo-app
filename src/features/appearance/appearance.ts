@@ -1,27 +1,18 @@
-import { Appearance as RNAppearance, useColorScheme } from 'react-native';
 import { useMMKVString } from 'react-native-mmkv';
 import { storage } from '@/storage';
 import { getScheme, type Scheme } from '@/theme';
 
-export type Appearance = 'light' | 'dark' | 'system';
+export type Appearance = 'light' | 'dark';
 
 const KEY = 'appearance';
 
-// Light unless the user picks otherwise: a health app shouldn't open dark.
+// Light unless the user picks Dark. (An old saved 'system' also reads as light.)
 export function useAppearance(): Appearance {
   const [value] = useMMKVString(KEY, storage);
-  return (value as Appearance | undefined) ?? 'light';
+  return value === 'dark' ? 'dark' : 'light';
 }
 
-export function useScheme(): Scheme {
-  const appearance = useAppearance();
-  const phone = useColorScheme();
-  if (appearance === 'system') return phone === 'dark' ? 'dark' : 'light';
-  return appearance;
-}
-
-const resolve = (a: Appearance): Scheme =>
-  a === 'system' ? (RNAppearance.getColorScheme() === 'dark' ? 'dark' : 'light') : a;
+export const useScheme = (): Scheme => useAppearance();
 
 // A switch that changes the colours plays a short full-screen transition first
 // (see AppearanceTransition); the new appearance is saved while it covers the
@@ -34,8 +25,8 @@ const emit = () => listeners.forEach(l => l());
 export function changeAppearance(next: Appearance) {
   const commit = () => storage.set(KEY, next);
   const from = getScheme();
-  const to = resolve(next);
-  if (from === to) return commit(); // e.g. Light -> Match phone on a light phone
+  const to = next;
+  if (from === to) return commit();
   pending = { from, to, commit };
   emit();
 }

@@ -258,7 +258,6 @@ export function HealthScreen({ profile }: { profile: Profile }) {
               options={[
                 { value: 'light', label: 'Light' },
                 { value: 'dark', label: 'Dark' },
-                { value: 'system', label: 'Match phone' },
               ]}
               value={appearance}
               onChange={next => {

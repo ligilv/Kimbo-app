@@ -229,7 +229,7 @@ export function TodayScreen({ profile }: { profile: Profile }) {
             {Math.round(totals.kcal).toLocaleString('en-IN')} / {targets.calories.toLocaleString('en-IN')}
           </Text>
           <Text style={styles.soFarText}>
-            P {Math.round(totals.protein)}/{targets.proteinG}
+            {Math.round(totals.protein)}/{targets.proteinG} g protein
           </Text>
         </Pressable>
       )}
