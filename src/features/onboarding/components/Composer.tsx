@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, TextInput, View } from 'react-native';
 import { Button } from '@/components/Button';
+import { CyclingWords, THINKING_WORDS } from '@/components/chat/TypingIndicator';
 import { Text } from '@/components/Text';
 import { formatTime } from '@/engine/time';
 import { flagged, getReports, latestReport } from '@/features/reports/reportStore';
@@ -73,7 +74,10 @@ function ReportComposer({ onSubmit }: { onSubmit: (patch: Answers) => void }) {
     return (
       <View style={[styles.row, styles.reading]}>
         <ActivityIndicator color={colors.ink} />
-        <Text style={styles.hint}>Reading your report. About 20 seconds…</Text>
+        <View>
+          <CyclingWords words={THINKING_WORDS.report} style={styles.readingWord} />
+          <Text style={styles.hint}>About 20 seconds</Text>
+        </View>
       </View>
     );
   return (
@@ -625,6 +629,7 @@ const styles = themedStyles(() => ({
   hint: { fontSize: 14, lineHeight: 20, color: colors.muted },
   grow: { flex: 1, paddingHorizontal: 8 },
   reading: { minHeight: 48 },
+  readingWord: { fontSize: 15, fontFamily: fonts.semiBold, color: colors.ink },
   helpCard: {
     backgroundColor: colors.card,
     borderRadius: 16,

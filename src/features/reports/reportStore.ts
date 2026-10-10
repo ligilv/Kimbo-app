@@ -87,8 +87,14 @@ export const remindLater = (id: string, days: number, now = new Date()) =>
 const addDaysIso = (now: Date, days: number) =>
   new Date(now.getTime() + days * 86_400_000).toISOString();
 
-export const dueFollowups = (list: Followup[], now: Date) =>
-  list.filter(f => f.state === 'open' && f.remindAt && new Date(f.remindAt) <= now);
+// Questions Mira should ask now. One a day at most: a report with eight
+// flagged values would otherwise be eight questions in a row, ahead of meals.
+export function dueFollowups(list: Followup[], now: Date) {
+  const today = toLocalDateKey(now);
+  const askedToday = list.some(f => f.answeredAt && toLocalDateKey(new Date(f.answeredAt)) === today);
+  if (askedToday) return [];
+  return list.filter(f => f.state === 'open' && f.remindAt && new Date(f.remindAt) <= now);
+}
 
 // The same value across every report, oldest first, for the trend view.
 export function history(key: string, reports = getReports()) {

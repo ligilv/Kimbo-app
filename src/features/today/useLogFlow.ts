@@ -28,7 +28,7 @@ export type Turn = NewTurn & { id: string };
 
 export type Card =
   | { kind: 'heard'; text: string }
-  | { kind: 'thinking' }
+  | { kind: 'thinking'; photo: boolean }
   | { kind: 'clarify'; question: string; options: string[] }
   | { kind: 'review'; rows: DraftRow[]; rawText: string }
   | { kind: 'failed'; text: string; retry?: ParseInput; photo?: boolean };
@@ -70,7 +70,7 @@ export function useLogFlow(date: DateKey, defaultSlot: MealSlot) {
   }, []);
 
   const run = useCallback(async (input: ParseInput) => {
-    setCard({ kind: 'thinking' });
+    setCard({ kind: 'thinking', photo: !!input.photo });
     const result = await parseMeal(input);
     if (!result.ok) {
       setCard({ kind: 'failed', text: ERRORS[result.reason], retry: input, photo: !!input.photo });

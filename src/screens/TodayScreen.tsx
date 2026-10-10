@@ -20,7 +20,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { MiraBubble, UserBubble } from '@/components/chat/ChatBubble';
-import { TypingIndicator } from '@/components/chat/TypingIndicator';
+import { THINKING_WORDS, TypingIndicator } from '@/components/chat/TypingIndicator';
 import { Text } from '@/components/Text';
 import { showToast } from '@/components/Toast';
 import { type Chip, nearestSlot, type NextAction } from '@/engine/nextAction';
@@ -300,7 +300,9 @@ export function TodayScreen({ profile }: { profile: Profile }) {
               )}
             </Animated.View>
           ))}
-          {flow.card?.kind === 'thinking' && <TypingIndicator />}
+          {flow.card?.kind === 'thinking' && (
+            <TypingIndicator words={flow.card.photo ? THINKING_WORDS.photo : THINKING_WORDS.text} />
+          )}
           {flow.card?.kind === 'heard' && (
             <HeardCard
               name="Mira"

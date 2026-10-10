@@ -7,10 +7,10 @@ import { AppearanceTransition } from '@/features/appearance/AppearanceTransition
 import { Navigation } from '@/navigation/RootStack';
 import { colors, setScheme } from '@/theme';
 
-// Above the tab bar and the composer.
+// At the top, under the status bar, so it never covers the text box.
 function Toasts() {
   const insets = useSafeAreaInsets();
-  return <ToastHost bottom={insets.bottom + 132} />;
+  return <ToastHost top={insets.top + 8} />;
 }
 
 // Switching appearance redraws everything below with the other colours; the

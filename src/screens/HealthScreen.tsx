@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomSheet } from '@/components/BottomSheet';
+import { CyclingWords, THINKING_WORDS } from '@/components/chat/TypingIndicator';
 import { Segmented } from '@/components/Segmented';
 import { type Appearance, changeAppearance, useAppearance } from '@/features/appearance/appearance';
 import { Button } from '@/components/Button';
@@ -177,7 +178,10 @@ export function HealthScreen({ profile }: { profile: Profile }) {
           {upload.reading ? (
             <View style={styles.reading}>
               <ActivityIndicator color={colors.ink} />
-              <Text style={styles.muted}>Reading your report. This takes about 20 seconds…</Text>
+              <View>
+                <CyclingWords words={THINKING_WORDS.report} style={styles.readingWord} />
+                <Text style={styles.muted}>About 20 seconds</Text>
+              </View>
             </View>
           ) : (
             <View style={styles.uploadRow}>
@@ -318,6 +322,7 @@ const styles = themedStyles(() => ({
   dotNone: { borderColor: colors.line },
   uploadRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   reading: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 48 },
+  readingWord: { fontSize: 15, fontFamily: fonts.semiBold, color: colors.ink },
   plan: { backgroundColor: colors.card, borderRadius: radius.lg, padding: spacing.lg, gap: 6 },
   kcal: { fontSize: 22, fontFamily: fonts.extraBold },
   planWhy: { fontSize: 15, lineHeight: 22 },

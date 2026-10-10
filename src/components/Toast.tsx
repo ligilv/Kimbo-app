@@ -1,6 +1,6 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { Pressable } from 'react-native';
-import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
+import Animated, { FadeInUp, FadeOutUp } from 'react-native-reanimated';
 import { Text } from '@/components/Text';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
@@ -22,7 +22,8 @@ const hide = () => {
   emit();
 };
 
-export function ToastHost({ bottom }: { bottom: number }) {
+// Shown at the top of the screen: at the bottom it covered the text box.
+export function ToastHost({ top }: { top: number }) {
   const toast = useSyncExternalStore(
     l => {
       listeners.add(l);
@@ -39,9 +40,9 @@ export function ToastHost({ bottom }: { bottom: number }) {
   return (
     <Animated.View
       key={toast.id}
-      entering={FadeInDown.duration(200)}
-      exiting={FadeOutDown.duration(150)}
-      style={[styles.toast, { bottom }]}
+      entering={FadeInUp.duration(200)}
+      exiting={FadeOutUp.duration(150)}
+      style={[styles.toast, { top }]}
       accessibilityLiveRegion="polite"
     >
       <Text style={styles.text}>{toast.text}</Text>
