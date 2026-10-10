@@ -65,7 +65,10 @@ const styles = themedStyles(() => ({
     borderTopLeftRadius: 6,
   },
   inverted: { backgroundColor: colors.ink },
-  miraText: { fontSize: 16, lineHeight: 23 },
+  // No lineHeight (here and in userText): on Android a custom lineHeight in a
+  // bubble that sizes to its text measured the line too narrow and cut off the
+  // last word ("Thanks! How tall are" without "you?").
+  miraText: { fontSize: 16 },
   invertedText: { color: colors.ground },
   userBubble: {
     alignSelf: 'flex-end',
@@ -76,8 +79,6 @@ const styles = themedStyles(() => ({
     borderColor: colors.reply,
   },
   userBubbleEditing: { borderColor: colors.muted, borderStyle: 'dashed' },
-  // No lineHeight: on Android a custom lineHeight in a bubble that sizes to its
-  // text measured the line too narrow and cut off the last word.
   userText: { fontSize: 16, fontFamily: fonts.regular, color: colors.onReply },
   pressed: { opacity: 0.85 },
 }));
