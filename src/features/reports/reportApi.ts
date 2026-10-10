@@ -28,6 +28,9 @@ function fromImage(res: ImagePickerResponse): PickResult {
   };
 }
 
+// "From gallery" for reports is hidden for now (Jay, 10 Oct); flip to bring it back.
+export const REPORT_FROM_GALLERY = false;
+
 export const photographReport = () =>
   openPicker(() => launchCamera({ ...PHOTO, cameraType: 'back', saveToPhotos: false })).then(fromImage);
 export const pickReportImage = () => openPicker(() => launchImageLibrary({ ...PHOTO, selectionLimit: 1 })).then(fromImage);

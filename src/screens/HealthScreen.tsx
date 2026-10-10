@@ -15,6 +15,7 @@ import { formatTime } from '@/engine/time';
 import { loadDemoAccount } from '@/features/demo/demoAccount';
 import { addDays, formatShortDate, toLocalDateKey } from '@/features/meals/dates';
 import { MedicineSetupSheet } from '@/features/medicines/MedicineSetupSheet';
+import { REPORT_FROM_GALLERY } from '@/features/reports/reportApi';
 import { useFollowupAnswer } from '@/features/reports/useFollowupAnswer';
 import { FOLLOWUP_CHOICES, followupQuestion } from '@/engine/nextAction';
 import { type DayMark, type Medicine, useAdherence, useMedicines } from '@/features/medicines/medicineStore';
@@ -193,7 +194,9 @@ export function HealthScreen({ profile }: { profile: Profile }) {
           ) : (
             <View style={styles.uploadRow}>
               <Button small variant="outline" label="Take a photo" onPress={() => send('camera')} />
-              <Button small variant="outline" label="From gallery" onPress={() => send('gallery')} />
+              {REPORT_FROM_GALLERY && (
+                <Button small variant="outline" label="From gallery" onPress={() => send('gallery')} />
+              )}
               <Button small variant="outline" label="PDF" onPress={() => send('pdf')} />
             </View>
           )}

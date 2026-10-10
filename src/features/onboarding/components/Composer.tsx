@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, TextInput, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { askForReminders } from '@/features/reminders/reminders';
+import { REPORT_FROM_GALLERY } from '@/features/reports/reportApi';
 import { CyclingWords, THINKING_WORDS } from '@/components/chat/TypingIndicator';
 import { Text } from '@/components/Text';
 import { formatTime } from '@/engine/time';
@@ -91,7 +92,9 @@ function ReportComposer({ onSubmit }: { onSubmit: (patch: Answers) => void }) {
       {state.kind === 'error' && <Text style={styles.hint}>{state.text}</Text>}
       <View style={styles.row}>
         <Button small variant="outline" label="Take a photo" onPress={() => send('camera')} style={styles.grow} />
-        <Button small variant="outline" label="From gallery" onPress={() => send('gallery')} style={styles.grow} />
+        {REPORT_FROM_GALLERY && (
+          <Button small variant="outline" label="From gallery" onPress={() => send('gallery')} style={styles.grow} />
+        )}
         <Button small variant="outline" label="PDF" onPress={() => send('pdf')} style={styles.grow} />
       </View>
       <Button small variant="ghost" label="Skip for now" onPress={() => onSubmit({ reportStep: 'skipped' })} />
